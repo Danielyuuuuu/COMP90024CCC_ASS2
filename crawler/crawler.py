@@ -28,11 +28,13 @@ class MyStreamListener(tweepy.StreamListener):
 
     def on_status(self, status):
         if(status.place is not None):
-            print("Text:----------------------\n   ", status.text)
-            print("place:----------------------\n   ", status.place)
-            print("-------Saving to the database-----------")
-            db.add_record(status.text,status.place.full_name)
-            print("-----------------------------------------------")
+            print("-----------new tweet found----------")
+            #print("created at:",status.created_at)
+            #print(status.text)
+            #print("-------Saving to the database-----------")
+            db.add_record(status._json)
+            #print("-------finished-----------")
+            #print("-----------------------------------------------")
 
     def on_error(self, status_code):
         print(status_code)
