@@ -29,3 +29,4 @@
     search_regex: OpenSSH
   loop: '{{ os_instance.results }}'
   when: item.openstack is defined
+
