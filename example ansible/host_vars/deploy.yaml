@@ -1,0 +1,10 @@
+---
+# ****************************** Common vars ******************************
+availability_zone: melbourne-qh2-uom
+instance_network: qh2-uom-internal
+instance_flavor: uom.mse.1c4g
+instance_image: f8b79936-6616-4a22-b55d-0d0a1d27bceb
+instance_key_name: NectarGroupKey # ssh private key
+wm_inventory_file: "./inventory/wm_inventory_file.ini"
+
+image_facts: []
