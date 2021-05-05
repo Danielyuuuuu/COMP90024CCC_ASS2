@@ -8,6 +8,22 @@
     state: latest
     update_cache: yes
 
+ # Install python
+- name: Install pip
+  become: yes
+  apt:
+    name: ['python3-venv']
+    state: latest
+    update_cache: yes   
+
+# Install python
+- name: Install pip
+  become: yes
+  apt:
+    name: ['python3-dev']
+    state: latest
+    update_cache: yes
+
 # Update python
 - name: Update pip
   become: yes
@@ -79,9 +95,9 @@
     name: ['folium']
     state: latest
 
-# # Install tensorflow
-# - name: Install tensorflow
-#   become: yes
-#   pip:
-#     name: ['tensorflow']
-#     state: latest
+# Install tensorflow
+- name: Install tensorflow
+  become: yes
+  pip:
+    name: ['tensorflow==2.3.0']
+    state: present
