@@ -29,3 +29,59 @@
     name: ['docker']
     state:  latest
 
+
+# Install pandas
+- name: Install pandas
+  become: yes
+  pip:
+    name: ['pandas']
+    state: latest
+
+# Install numpy
+- name: Install numpy
+  become: yes
+  pip:
+    name: ['numpy']
+    state: latest
+
+# Install scikit-learn
+- name: Install scikit-learn
+  become: yes
+  pip:
+    name: ['scikit-learn']
+    state: latest
+
+# Install nltk
+- name: Install nltk
+  become: yes
+  pip:
+    name: ['nltk']
+    state: latest
+
+# Install gensim
+- name: Install gensim
+  become: yes
+  pip:
+    name: ['gensim']
+    state: latest
+
+# Install geopandas
+- name: Install geopandas
+  become: yes
+  pip:
+    name: ['geopandas']
+    state: latest
+
+# Install folium
+- name: Install folium
+  become: yes
+  pip:
+    name: ['folium']
+    state: latest
+
+# # Install tensorflow
+# - name: Install tensorflow
+#   become: yes
+#   pip:
+#     name: ['tensorflow']
+#     state: latest
