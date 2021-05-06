@@ -109,3 +109,10 @@
     name: ['git']
     state: latest
     update_cache: yes
+
+- name: Install p7zip
+  become: yes
+  apt:
+    name: ['p7zip-full']
+    state: latest
+    update_cache: yes
