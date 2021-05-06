@@ -28,6 +28,8 @@
   file:
     path: '{{ git_repo }}'
     state: directory
+  # shell: |
+  #   sudo mkdir '{{ git_repo }}'
 
 # - name: git pull
 #   shell: git pull # --config core.sshCommand="ssh -i /home/ubuntu/.ssh/GitHubKey"
@@ -48,6 +50,10 @@
 #     git clone ssh://git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
 
 
+# - name: clone from github
+#   shell: |
+#     git clone ssh://git@github.com:kelseyhightower/helloworld.git
+
 - name: clone from github
   shell: |
-    git clone ssh://git@github.com:kelseyhightower/helloworld.git
+    sudo git clone git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
