@@ -101,3 +101,11 @@
   pip:
     name: ['tensorflow==2.3.0']
     state: present
+
+
+- name: Install git
+  become: yes
+  apt: 
+    name: ['git']
+    state: latest
+    update_cache: yes
