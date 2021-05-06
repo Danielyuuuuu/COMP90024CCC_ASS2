@@ -56,4 +56,4 @@
 
 - name: clone from github
   shell: |
-    sudo git clone git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
+    sudo git -c core.sshCommand="ssh -i /home/ubuntu/.ssh/github-key" clone git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
