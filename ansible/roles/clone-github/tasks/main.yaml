@@ -1,0 +1,53 @@
+---
+- name: add github ssh key
+  copy:
+    src: "config/github-key.pem"
+    dest: /home/ubuntu/.ssh/github-key
+    owner: ubuntu
+    group: ubuntu
+    mode: 0600
+
+- name: configure ssh to use ansible key for github.com
+  template:
+    src: "config/ssh-config"
+    dest: /home/ubuntu/.ssh/config
+    owner: ubuntu
+    group: ubuntu
+    mode: 0644
+
+# - name: Clone a private repository into /opt.
+#   become: yes
+#   git:
+#     repo: git@github.com:rexding97/COMP90024CCC_ASS2.git
+#     version: master
+#     dest: /opt/github-repo
+
+
+- name: Creating a git directory
+  become: yes
+  file:
+    path: '{{ git_repo }}'
+    state: directory
+
+# - name: git pull
+#   shell: git pull # --config core.sshCommand="ssh -i /home/ubuntu/.ssh/GitHubKey"
+#   args:
+#     chdir: '{{ git_repo }}'
+
+# - name: Clone the github repository
+#   become: yes
+#   git:
+#     repo: git@github.com:rexding97/COMP90024CCC_ASS2.git
+#     dest: '{{ git_repo }}'
+#     accept_hostkey: yes
+#     key_file: /home/ubuntu/.ssh/github-key
+
+# - name: Clone git
+#   become: yes
+#   shell:
+#     git clone ssh://git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
+
+
+- name: clone from github
+  shell: |
+    git clone ssh://git@github.com:kelseyhightower/helloworld.git

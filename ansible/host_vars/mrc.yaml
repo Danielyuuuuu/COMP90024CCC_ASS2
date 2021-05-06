@@ -32,3 +32,5 @@ instance_flavor: 	uom.mse.1c4g
 
 ansible_user: ubuntu
 ansible_ssh_private_key_file: ./config/mrc-key.pem
+
+git_repo: ./home/ubuntu/git-repo
