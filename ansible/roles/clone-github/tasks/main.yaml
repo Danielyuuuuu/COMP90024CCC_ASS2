@@ -7,6 +7,15 @@
     group: ubuntu
     mode: 0600
 
+- name: add github ssh key to a folder
+  become: yes
+  copy:
+    src: "config/github-key.pem"
+    dest: ./home/ubuntu
+    owner: ubuntu
+    group: ubuntu
+    mode: 0600
+
 - name: configure ssh to use ansible key for github.com
   template:
     src: "config/ssh-config"
@@ -23,11 +32,11 @@
 #     dest: /opt/github-repo
 
 
-- name: Creating a git directory
-  become: yes
-  file:
-    path: '{{ git_repo }}'
-    state: directory
+# - name: Creating a git directory
+#   become: yes
+#   file:
+#     path: '{{ git_repo }}'
+#     state: directory
   # shell: |
   #   sudo mkdir '{{ git_repo }}'
 
@@ -54,6 +63,11 @@
 #   shell: |
 #     git clone ssh://git@github.com:kelseyhightower/helloworld.git
 
+- name: Delete content & directory
+  file:
+    state: absent
+    path: '{{ git_repo }}'
+
 - name: clone from github
   shell: |
-    sudo git -c core.sshCommand="ssh -i /home/ubuntu/.ssh/github-key" clone git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
+    sudo git -c core.sshCommand="ssh -i ./home/ubuntu/" clone git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
