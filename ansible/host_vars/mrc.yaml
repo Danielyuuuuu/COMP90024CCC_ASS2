@@ -35,7 +35,7 @@ ansible_ssh_private_key_file: ./config/mrc-key.pem
 
 git_repo: ./home/ubuntu/git-repo
 
-ansible_python_interpreter: auto
+# ansible_python_interpreter: /usr/local/bin/python3
 
 github_user_name: mrc-user
 github_user_password: unimelb2021
