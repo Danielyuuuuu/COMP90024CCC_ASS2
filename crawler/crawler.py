@@ -1,6 +1,8 @@
 import tweepy
 import json
 from database import tweetsDB
+from sentiment_analysis import sentiment_analyzer
+
 consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
 consumer_secret = "T0QCvEWdUm2PakSKDsho9usdvaPWZsUB0hhB2XE1JwgwCGp7wV"
 access_token = "1252083222189498368-BZUECSVoWd6IDSWGnETwH4krVS3AHh"
@@ -23,6 +25,29 @@ except:
 
 # connect database
 db = tweetsDB()
+
+
+s = sentiment_analyzer.SentimentAnalyzer()
+text = 'i am super happy'
+v = s.predict_sentiment(text)
+print(text)
+print(v)
+
+text = 'Today is Tuesday'
+v = s.predict_sentiment(text)
+print(text)
+print(v)
+
+text = 'Today is Sunday'
+v = s.predict_sentiment(text)
+print(text)
+print(v)
+
+text = 'The dog has died'
+v = s.predict_sentiment(text)
+print(text)
+print(v)
+
 
 class MyStreamListener(tweepy.StreamListener):
 
