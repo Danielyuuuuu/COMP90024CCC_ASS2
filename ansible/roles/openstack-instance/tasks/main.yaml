@@ -30,3 +30,15 @@
   loop: '{{ os_instance.results }}'
   when: item.openstack is defined
 
+- name: Add ip address to host.ini
+  add_host:
+    name: '{{ item.openstack.public_v4 }}'
+    groups: instances
+  loop: '{{ os_instance.results }}'
+
+
+- name: create file
+  become: yes
+  template:
+    src: instance-ip.j2
+    dest: ./inventory/hosts.ini
