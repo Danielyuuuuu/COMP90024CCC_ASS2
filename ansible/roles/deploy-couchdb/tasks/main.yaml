@@ -1,0 +1,46 @@
+- name: Install software-properties-common
+  become: yes
+  apt:
+    name: ['software-properties-common']
+    state: latest
+    update_cache: yes
+
+- name: Enable Apache CouchDB package repository
+  become: yes
+  shell: |
+    curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add
+    echo "deb https://apache.bintray.com/couchdb-deb focal main" | sudo tee -a /etc/apt/sources.list
+
+# - name: 
+#   shell: echo "deb https://apache.bintray.com/couchdb-deb focal main" | sudo tee -a /etc/apt/sources.list
+
+
+# - name: Update repositories cache and install couchdb
+#   become: yes
+#   apt:
+#     name: ['couchdb']
+#     force_apt_get: yes
+#     update_cache: yes
+
+
+- name: Enable cluster
+  become: yes
+  uri:
+    method: POST
+    url: http://localhost:5984/_cluster_setup
+    user: admin
+    password: admin
+    force_basic_auth: yes
+    status_code: 201
+    body_format: json
+    body: 
+      action: "enable_cluster"
+      bind_address: "0.0.0.0"
+      username: "admin"
+      password: "admin"
+      port: "5984"
+      remote_node: "instance"
+      remote_current_user: "admin"
+      remote_current_password: "admin"
+  # loop: "{{ groups['dbservers'] }}"
+  # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
