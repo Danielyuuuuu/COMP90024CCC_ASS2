@@ -70,3 +70,33 @@
       remote_current_password: "admin"
   # loop: "{{ groups['dbservers'] }}"
   # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
+
+# - name: Add nodes
+#   uri:
+#     method: POST
+#     url: http://localhost:5984/_cluster_setup
+#     user: admin
+#     password: admin
+#     force_basic_auth: yes
+#     status_code: 201
+#     body_format: json
+#     body:
+#       action: "add_node"
+#       host: "{{ item }}"
+#       port: "5984"
+#       username: "admin"
+#       password: "admin"
+#   # loop: "{{ groups['dbservers'] }}"
+#   # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
+
+# - name: Finish cluster setup
+#   uri:
+#     method: POST
+#     url: http://localhost:5984/_cluster_setup
+#     user: admin
+#     password: admin
+#     force_basic_auth: yes
+#     status_code: 201
+#     body_format: json
+#     body:
+#       action: "finish_cluster"
