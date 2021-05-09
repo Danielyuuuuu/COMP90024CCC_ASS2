@@ -22,6 +22,32 @@
 #     force_apt_get: yes
 #     update_cache: yes
 
+# # Install couchdb
+# - name: Install couchdb
+#   become: yes
+#   pip:
+#     name: ['couchdb']
+#     state: latest
+
+# - name: Remove lock files
+#   become: yes
+#   shell: |
+#     sudo rm /var/lib/dpkg/lock
+#     sudo rm /var/lib/dpkg/lock-frontend
+#     sudo rm /var/lib/apt/lists/lock
+#     sudo rm /var/cache/apt/archives/lock
+
+- name: install couchdb
+  become: yes
+  apt:
+    name: couchdb
+  register: couchdb_install
+
+# - name: Restart couchdb
+#   systemd:
+#     name: couchdb
+#     state: restarted
+
 
 - name: Enable cluster
   become: yes
