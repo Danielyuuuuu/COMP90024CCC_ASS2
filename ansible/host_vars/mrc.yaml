@@ -5,6 +5,10 @@ availability_zone: melbourne-qh2-uom
 volumes:
   - vol_name: vol-2
     vol_size: 10
+  - vol_name: vol-3
+    vol_size: 10
+  - vol_name: vol-4
+    vol_size: 10
 
 # Security group
 security_groups:
@@ -25,6 +29,10 @@ security_groups:
 instances:
   - name: testInstance
     volumes: 'vol-2'
+  - name: testInstance2
+    volumes: 'vol-3'
+  - name: testInstance3
+    volumes: 'vol-4'
 
 instance_image: f8b79936-6616-4a22-b55d-0d0a1d27bceb
 instance_key_name: mrc-key
@@ -35,4 +43,9 @@ ansible_ssh_private_key_file: ./config/mrc-key.pem
 
 git_repo: ./home/ubuntu/git-repo
 
-ansible_python_interpreter: auto
+# ansible_python_interpreter: /usr/local/bin/python3
+
+github_user_name: mrc-user
+github_user_password: unimelb2021
+
+couchdb_container_name: couchdb

@@ -1,0 +1,102 @@
+- name: Install software-properties-common
+  become: yes
+  apt:
+    name: ['software-properties-common']
+    state: latest
+    update_cache: yes
+
+- name: Enable Apache CouchDB package repository
+  become: yes
+  shell: |
+    curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add
+    echo "deb https://apache.bintray.com/couchdb-deb focal main" | sudo tee -a /etc/apt/sources.list
+
+# - name: 
+#   shell: echo "deb https://apache.bintray.com/couchdb-deb focal main" | sudo tee -a /etc/apt/sources.list
+
+
+# - name: Update repositories cache and install couchdb
+#   become: yes
+#   apt:
+#     name: ['couchdb']
+#     force_apt_get: yes
+#     update_cache: yes
+
+# # Install couchdb
+# - name: Install couchdb
+#   become: yes
+#   pip:
+#     name: ['couchdb']
+#     state: latest
+
+# - name: Remove lock files
+#   become: yes
+#   shell: |
+#     sudo rm /var/lib/dpkg/lock
+#     sudo rm /var/lib/dpkg/lock-frontend
+#     sudo rm /var/lib/apt/lists/lock
+#     sudo rm /var/cache/apt/archives/lock
+
+- name: install couchdb
+  become: yes
+  apt:
+    name: couchdb
+  register: couchdb_install
+
+# - name: Restart couchdb
+#   systemd:
+#     name: couchdb
+#     state: restarted
+
+
+- name: Enable cluster
+  become: yes
+  uri:
+    method: POST
+    url: http://localhost:5984/_cluster_setup
+    user: admin
+    password: admin
+    force_basic_auth: yes
+    status_code: 201
+    body_format: json
+    body: 
+      action: "enable_cluster"
+      bind_address: "0.0.0.0"
+      username: "admin"
+      password: "admin"
+      port: "5984"
+      remote_node: "instance"
+      remote_current_user: "admin"
+      remote_current_password: "admin"
+  # loop: "{{ groups['dbservers'] }}"
+  # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
+
+# - name: Add nodes
+#   uri:
+#     method: POST
+#     url: http://localhost:5984/_cluster_setup
+#     user: admin
+#     password: admin
+#     force_basic_auth: yes
+#     status_code: 201
+#     body_format: json
+#     body:
+#       action: "add_node"
+#       host: "{{ item }}"
+#       port: "5984"
+#       username: "admin"
+#       password: "admin"
+#   # loop: "{{ groups['dbservers'] }}"
+#   # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
+
+# - name: Finish cluster setup
+#   uri:
+#     method: POST
+#     url: http://localhost:5984/_cluster_setup
+#     user: admin
+#     password: admin
+#     force_basic_auth: yes
+#     status_code: 201
+#     body_format: json
+#     body:
+#       action: "finish_cluster"

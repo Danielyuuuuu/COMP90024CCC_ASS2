@@ -1,0 +1,4 @@
+[instances]
+{%   for item in os_instance.results %}
+{{ item.openstack.public_v4 }}
+{%   endfor %}
