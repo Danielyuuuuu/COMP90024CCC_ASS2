@@ -3,12 +3,12 @@ availability_zone: melbourne-qh2-uom
 
 # Volume
 volumes:
+  - vol_name: vol-1
+    vol_size: 100
   - vol_name: vol-2
-    vol_size: 10
+    vol_size: 100
   - vol_name: vol-3
-    vol_size: 10
-  - vol_name: vol-4
-    vol_size: 10
+    vol_size: 100
 
 # Security group
 security_groups:
@@ -27,12 +27,12 @@ security_groups:
 
 # Instance
 instances:
-  - name: testInstance
+  - name: testInstance-1
+    volumes: 'vol-1'
+  - name: testInstance-2
     volumes: 'vol-2'
-  - name: testInstance2
+  - name: testInstance-3
     volumes: 'vol-3'
-  - name: testInstance3
-    volumes: 'vol-4'
 
 instance_image: f8b79936-6616-4a22-b55d-0d0a1d27bceb
 instance_key_name: mrc-key
