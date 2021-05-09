@@ -1,13 +1,18 @@
 from TwitterSearch import TwitterSearchOrder, TwitterSearch
 import geopandas
 from crawler_keywords import words
+from sentiment_analysis import sentiment_analyzer
+from database import tweetsDB
+       
 
 zones = geopandas.read_file('./geo_data/target_zones.geojson')
 zone_code = zones.loc[0,:].zone
-zone_location=zones.loc[0,:].geometry.bounds
 search_lat = zones.loc[0,:].center_latitude
 search_long = zones.loc[0,:].center_longitude
 search_raidus = zones.loc[0,:].radius
+
+db = tweetsDB()
+sa = sentiment_analyzer.SentimentAnalyzer()
 
 try:
     tso = TwitterSearchOrder() # create a TwitterSearchOrder object
@@ -27,8 +32,16 @@ try:
 
      # this is where the fun actually starts :)
     for tweet in ts.search_tweets_iterable(tso):
-        print(tweet)
-        print( '@%s tweeted: %s' % ( tweet['user']['screen_name'], tweet['text'] ) )
-
+		# Data to be written  
+		dict ={  
+		  "id": tweet['id'],  
+		  "created_at": tweet['created_at'],
+		  "text": tweet['text'],  
+		  "zone_code": zone_code,
+		  "senti_score" = sa.predict_sentiment(tweet['text'])
+		}  			   
+        #print( '@%s tweeted: %s' % ( tweet['user']['screen_name'], tweet['text'] ) )
+		db.add_record(dict)
+		
 except TwitterSearchException as e: # take care of all those ugly errors if there are some
     print(e)
