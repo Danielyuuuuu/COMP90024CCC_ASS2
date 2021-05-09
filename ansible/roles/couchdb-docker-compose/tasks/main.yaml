@@ -1,12 +1,25 @@
+# - name: Remove docker
+#   become: yes
+#   shell: sudo apt-get remove docker docker-engine docker.io containerd runc
+# - name: Install docker
+#   shell: |
+#     sudo apt-get install \
+#     apt-transport-https \
+#     ca-certificates \
+#     curl \
+#     gnupg \
+#     lsb-release
+
+
 - name: Install docker
   become: yes
-  pip:
-    name: ['docker']
+  apt:
+    name: ['docker.io']
     state: latest
 
 - name: Install docker-compose
   become: yes
-  pip:
+  apt:
     name: ['docker-compose']
     state: latest
 
@@ -18,9 +31,26 @@
   become: yes
   shell: ps axf | grep docker | grep -v grep | awk '{print "kill -9 " $1}' | sudo sh 
 
+- name: Stop docker
+  become: yes
+  shell: sudo systemctl stop docker
+
 - name: Start docker
   become: yes
   shell: sudo systemctl start docker
+
+# - name: Start docker
+#   become: yes
+#   shell: |
+#     sudo dockerd --debug \
+#     --tls=true \
+#     --tlscert=/var/docker/server.pem \
+#     --tlskey=/var/docker/serverkey.pem \
+#     --host tcp://192.168.59.3:2376
+
+- name: Add user to docker group
+  become: yes
+  shell: sudo usermod -aG docker root
 
 - name: Run couchDB docker compose
   become: yes
