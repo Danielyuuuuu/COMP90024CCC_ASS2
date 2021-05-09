@@ -1,0 +1,29 @@
+- name: Install docker
+  become: yes
+  pip:
+    name: ['docker']
+    state: latest
+
+- name: Install docker-compose
+  become: yes
+  pip:
+    name: ['docker-compose']
+    state: latest
+
+- name: Remove previous PID file
+  become: yes
+  shell: rm -rf /var/run/docker.pid
+
+- name:
+  become: yes
+  shell: ps axf | grep docker | grep -v grep | awk '{print "kill -9 " $1}' | sudo sh 
+
+- name: Start docker
+  become: yes
+  shell: sudo systemctl start docker
+
+- name: Run couchDB docker compose
+  become: yes
+  shell: |
+    chdir=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/
+    sudo docker-compose build
