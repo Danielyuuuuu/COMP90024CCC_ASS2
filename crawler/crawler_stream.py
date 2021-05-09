@@ -41,14 +41,14 @@ class MyStreamListener(tweepy.StreamListener):
             #print(status.text)
             #print("-------Saving to the database-----------")
             if any(x in status.text for x in words.get('vaccine')):
-                dict ={  
+                dic ={  
                 "id": status.id,  
                 "created_at": status.created_at,
                 "text": status.text,  
                 "zone_code": zone_code,
-                "senti_score" = sa.predict_sentiment(status.text)
+                "senti_score" : sa.predict_sentiment(status.text)
                 }  
-                db.add_record(dict)
+                db.add_record(dic)
             #print("-------finished-----------")
             #print("-----------------------------------------------")
 
