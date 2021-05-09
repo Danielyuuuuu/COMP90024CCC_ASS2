@@ -2,14 +2,16 @@ import tweepy
 import json
 from database import tweetsDB
 from sentiment_analysis import sentiment_analyzer
+import geopandas
 
 consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
 consumer_secret = "T0QCvEWdUm2PakSKDsho9usdvaPWZsUB0hhB2XE1JwgwCGp7wV"
 access_token = "1252083222189498368-BZUECSVoWd6IDSWGnETwH4krVS3AHh"
 access_token_secret = "y9UNO50rhFndcMPy4S4cY5qLEcZdz6NygWyl8t0ZY7H8s"
 
-GEOBOX_MELBOURNE = [144.877548, -37.851203, 145.031356, -
-                    37.729655]  # https://boundingbox.klokantech.com/
+zones = geopandas.read_file('./geo_data/target_zones.geojson')
+
+GEOBOX_MELBOURNE = [144.877548, -37.851203, 145.031356, -37.729655]  # https://boundingbox.klokantech.com/
 GEOBOX_AUS = [106.8, -41.9, 154.9, -11.5]
 
 # connect twitter
@@ -25,29 +27,7 @@ except:
 
 # connect database
 db = tweetsDB()
-
-
-s = sentiment_analyzer.SentimentAnalyzer()
-text = 'i am super happy'
-v = s.predict_sentiment(text)
-print(text)
-print(v)
-
-text = 'Today is Tuesday'
-v = s.predict_sentiment(text)
-print(text)
-print(v)
-
-text = 'Today is Sunday'
-v = s.predict_sentiment(text)
-print(text)
-print(v)
-
-text = 'The dog has died'
-v = s.predict_sentiment(text)
-print(text)
-print(v)
-
+sa = sentiment_analyzer.SentimentAnalyzer()
 
 class MyStreamListener(tweepy.StreamListener):
 
@@ -57,6 +37,7 @@ class MyStreamListener(tweepy.StreamListener):
             #print("created at:",status.created_at)
             #print(status.text)
             #print("-------Saving to the database-----------")
+			senti_score = sa.predict_sentiment(status.text)
             db.add_record(status._json)
             #print("-------finished-----------")
             #print("-----------------------------------------------")
