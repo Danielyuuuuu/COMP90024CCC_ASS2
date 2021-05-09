@@ -10,6 +10,14 @@
 #     gnupg \
 #     lsb-release
 
+# - name: Install apt transport https
+#   shell: sudo apt install apt-transport-https ca-certificates curl software-properties-common
+
+# - name: Add GPG key
+#   shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+# - name: Add the Docker repository to APT sources
+#   shell: sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 
 - name: Install docker
   become: yes
