@@ -39,7 +39,7 @@ except:
 
 sa = sentiment_analyzer.SentimentAnalyzer()
 
-def processPage(page,zone_name,keywords,save_to_db,return_data,db_name='tweet_zone_sentiment'):
+def processPage(page,zone_name,keywords,save_to_db,return_data,db_name):
     db = tweetsDB(db_name)
     result = []
     count = 0
