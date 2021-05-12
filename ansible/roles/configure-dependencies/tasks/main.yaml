@@ -45,6 +45,18 @@
     name: ['docker']
     state:  latest
 
+- name: Install docker.io
+  become: yes
+  apt:
+    name: ['docker.io']
+    state: latest
+
+- name: Install docker-compose
+  become: yes
+  apt:
+    name: ['docker-compose']
+    state: latest
+
 
 # Install pandas
 - name: Install pandas

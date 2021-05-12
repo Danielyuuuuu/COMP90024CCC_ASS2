@@ -1,0 +1,5 @@
+- name: Run couchDB docker compose
+  become: yes
+  shell: |
+    chdir=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/
+    sudo docker-compose up -d
