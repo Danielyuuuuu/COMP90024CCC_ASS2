@@ -8,7 +8,7 @@ import tweepy
 import json
 from database import tweetsDB
 import tweepy
-from zoneFeatures import zones
+from zoneFeatures import zone_info
 from datetime import datetime
 import dateutil.relativedelta
 from sentiment_analysis import sentiment_analyzer
@@ -40,7 +40,10 @@ except:
 sa = sentiment_analyzer.SentimentAnalyzer()
 
 def processPage(page,zone_name,keywords,save_to_db,return_data,db_name):
-    db = tweetsDB(db_name)
+    if (save_to_db):
+        db = tweetsDB(db_name)
+    else:
+        db = None
     result = []
     count = 0
     for tweet in page:
@@ -72,15 +75,13 @@ def search(keywords=[],point_radius=[],boundingbox=[],
     # results_per_page should between 10-100
     # point_radius should be of format: [lon lat radius], radius should be less than 40km
     # bounding_box: [west_long south_lat east_long north_lat]
-    query = "lang:en "
+    query = ""
     from_date=''
     count=0
-    if(zone_name in zones.keys()):
-        point_radius = zones[zone_name]
     try:
         if (keywords):
             assert type(keywords)==list,"keywords should be a list of string"
-            query += " ".join(list(map(str,keywords)))
+            query += "("+" OR ".join(list(map(str,keywords)))+")"
         if (point_radius):
             assert len(point_radius)==3, "point_radius should be of type [lon,lat,radius]"
             query += " point_radius:["+ " ".join(list(map(str,point_radius)))+"]"
@@ -90,9 +91,12 @@ def search(keywords=[],point_radius=[],boundingbox=[],
         if (not from_date):
             d= datetime.now() + dateutil.relativedelta.relativedelta(days=-29)
             from_date = '%d%02d%02d%02d%02d'%(d.year,d.month,d.day,d.hour,d.minute)
+        query += " lang:en"
         data = []
         page_count = 0
-        for page in tweepy.Cursor(api.search_30_day, environment_name='comp90024',
+        print(query)
+        print()
+        for page in tweepy.Cursor(api.search_full_archive, environment_name='comp90024full',
                                   query=query,fromDate=from_date,
                                   maxResults=results_per_page).pages():
             
@@ -112,20 +116,51 @@ def search(keywords=[],point_radius=[],boundingbox=[],
     except tweepy.TweepError as e:
         print(e)
         return
-
+"""
+#   SEARCH by Radius
+from zoneFeatures import zone_info
 for zone, pr in zones.items():
-    data = search(db_name='tweet_zone_sentiment',zone_name=zone)
+    data = search(db_name='tweet_zone_sentiment',zone_name=zone,point_radius=pr)
+
+vaccine=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown']
+data = []
+for zone in zones.keys():
+    data += search(keywords=vaccine,save_to_db=False,zone_name=zone, n=100,from_date = "202101010000")
 
 """
-vaccine=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc']
-lockdown=['lockdown']
-for word in vaccine:
-    for zone in zones.keys():
-        data = search(keywords=[word] ,db_name="tweet_keyword_sentiment",zone_name=zone, n=100)
+
+
+
+"""
+#   SEARCH by BOUNDING BOX
+"""
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+def getBoundingbox(zones):
+    zoneName2boundingbox = {}
+    for zone in zones:
+        name = zone["properties"]["zone"]
+        box = zone["geometry"]["coordinates"]
+        zoneName2boundingbox[name] = [round(min(column(box[0],0)),5),round(min(column(box[0],1)),5),
+                                      round(max(column(box[0],0)),5),round(max(column(box[0],1)),5)]
+    return zoneName2boundingbox
+
+box = getBoundingbox(zone_info["features"])
+keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown']
+data = []
+for name,b in box.items():
+    data += search(keywords=keywords,save_to_db=False,zone_name=name,
+                   n=100,from_date = "202101010000",boundingbox=b)
+"""
+# TEST 
+q = "lockdown bounding_box:[144.86281 -37.79295 145.01112 -37.71586] lang:en"
+record = api.search_full_archive(environment_name='comp90024full',query=q,fromDate = "202101010000")
+
 """
 
-
-
-
-
-
+"""
+# Save Result
+with open('data.json', 'w') as outfile:
+    json.dump(data, outfile
+"""
