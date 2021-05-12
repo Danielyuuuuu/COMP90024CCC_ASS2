@@ -8,21 +8,21 @@
     state: latest
     update_cache: yes
 
- # Install python
-- name: Install pip
-  become: yes
-  apt:
-    name: ['python3-venv']
-    state: latest
-    update_cache: yes   
+#  # Install python
+# - name: Install pip
+#   become: yes
+#   apt:
+#     name: ['python3-venv']
+#     state: latest
+#     update_cache: yes   
 
-# Install python
-- name: Install pip
-  become: yes
-  apt:
-    name: ['python3-dev']
-    state: latest
-    update_cache: yes
+# # Install python
+# - name: Install pip
+#   become: yes
+#   apt:
+#     name: ['python3-dev']
+#     state: latest
+#     update_cache: yes
 
 # Update python
 - name: Update pip
