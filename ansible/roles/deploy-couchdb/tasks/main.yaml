@@ -1,102 +1,63 @@
-- name: Install software-properties-common
-  become: yes
-  apt:
-    name: ['software-properties-common']
-    state: latest
-    update_cache: yes
-
-- name: Enable Apache CouchDB package repository
-  become: yes
+- name: Create docker proxy file
   shell: |
-    curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add
-    echo "deb https://apache.bintray.com/couchdb-deb focal main" | sudo tee -a /etc/apt/sources.list
+    sudo mkdir -p /etc/systemd/system/docker.service.d
+    sudo touch /etc/systemd/system/docker.service.d/http-proxy.conf
 
-# - name: 
-#   shell: echo "deb https://apache.bintray.com/couchdb-deb focal main" | sudo tee -a /etc/apt/sources.list
-
-
-# - name: Update repositories cache and install couchdb
-#   become: yes
-#   apt:
-#     name: ['couchdb']
-#     force_apt_get: yes
-#     update_cache: yes
-
-# # Install couchdb
-# - name: Install couchdb
-#   become: yes
-#   pip:
-#     name: ['couchdb']
-#     state: latest
-
-# - name: Remove lock files
-#   become: yes
-#   shell: |
-#     sudo rm /var/lib/dpkg/lock
-#     sudo rm /var/lib/dpkg/lock-frontend
-#     sudo rm /var/lib/apt/lists/lock
-#     sudo rm /var/cache/apt/archives/lock
-
-- name: install couchdb
+- name: Add proxy to the instance
   become: yes
-  apt:
-    name: couchdb
-  register: couchdb_install
+  copy:
+    dest: /etc/systemd/system/docker.service.d/http-proxy.conf
+    content: |
+      [Service]
+      Environment="HTTP_PROXY=http://wwwproxy.unimelb.edu.au:8000/"
+      Environment="HTTPS_PROXY=http://wwwproxy.unimelb.edu.au:8000/"
+      Environment="NO_PROXY=localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
+      Environment="http_proxy=http://wwwproxy.unimelb.edu.au:8000/"
+      Environment="https_proxy=http://wwwproxy.unimelb.edu.au:8000/"
 
-# - name: Restart couchdb
-#   systemd:
-#     name: couchdb
-#     state: restarted
 
+- name: Create another docker proxy file
+  shell: |
+    sudo mkdir -p /home/ubuntu/.docker
+    sudo touch /home/ubuntu/.docker/config.json
 
-- name: Enable cluster
+- name: Add another proxy to the instance
   become: yes
-  uri:
-    method: POST
-    url: http://localhost:5984/_cluster_setup
-    user: admin
-    password: admin
-    force_basic_auth: yes
-    status_code: 201
-    body_format: json
-    body: 
-      action: "enable_cluster"
-      bind_address: "0.0.0.0"
-      username: "admin"
-      password: "admin"
-      port: "5984"
-      remote_node: "instance"
-      remote_current_user: "admin"
-      remote_current_password: "admin"
-  # loop: "{{ groups['dbservers'] }}"
-  # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
+  copy:
+    dest: /home/ubuntu/.docker/config.json
+    content: |
+      {
+        "proxies":
+        {
+          "default":
+          {
+            "httpProxy": "http://wwwproxy.unimelb.edu.au:8000/",
+            "httpsProxy": "http://wwwproxy.unimelb.edu.au:8000/",
+            "noProxy": "localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
+          }
+        }
+      }
 
-# - name: Add nodes
-#   uri:
-#     method: POST
-#     url: http://localhost:5984/_cluster_setup
-#     user: admin
-#     password: admin
-#     force_basic_auth: yes
-#     status_code: 201
-#     body_format: json
-#     body:
-#       action: "add_node"
-#       host: "{{ item }}"
-#       port: "5984"
-#       username: "admin"
-#       password: "admin"
-#   # loop: "{{ groups['dbservers'] }}"
-#   # when: inventory_hostname == groups['dbservers'][0] and inventory_hostname != item
+- name: Stop docker
+  become: yes
+  shell: sudo systemctl stop docker
 
-# - name: Finish cluster setup
-#   uri:
-#     method: POST
-#     url: http://localhost:5984/_cluster_setup
-#     user: admin
-#     password: admin
-#     force_basic_auth: yes
-#     status_code: 201
-#     body_format: json
-#     body:
-#       action: "finish_cluster"
+- name: Reload docker daemon
+  shell: sudo systemctl daemon-reload
+
+- name: Start docker
+  become: yes
+  shell: sudo systemctl start docker
+
+- name: Start a container with a couchdb
+  become: yes
+  docker_container:
+    name: "my-couchdb"
+    image: "apache/couchdb:3.0"
+    ports:
+      - "5984:5984"
+    env:
+      COUCHDB_PASSWORD: "password"
+      COUCHDB_USER: "admin"
+      # NODENAME: "{{ ansible_host }}"
+      # COUCHDB_SECRET: "{{ couchdb_cookie }}"

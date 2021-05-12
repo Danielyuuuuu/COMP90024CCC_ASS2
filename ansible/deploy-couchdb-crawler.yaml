@@ -7,5 +7,5 @@
   gather_facts: true
 
   roles:
-    # - role: deploy-couchdb
-    - role: couchdb-docker-compose
+    - role: deploy-couchdb
+    # - role: couchdb-docker-compose
