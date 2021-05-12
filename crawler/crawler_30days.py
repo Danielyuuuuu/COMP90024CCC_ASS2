@@ -8,16 +8,21 @@ import tweepy
 import json
 from database import tweetsDB
 import tweepy
-from zoneFeatures import zones
+from zoneFeatures import zone_info
 from datetime import datetime
 import dateutil.relativedelta
 from sentiment_analysis import sentiment_analyzer
-
+# Yanze' Key
+consumer_key="7jWNg1jENq2hvmAzqZeKvfcF4"
+consumer_secret="l9C5m1JCbdYTOTbLYWC3W8AkEE7BC3ofHkLDgos37clTxDJUyc"
+access_token="1366203266162253825-CvOHBqKvMEqbN9iOpr975BOg6OttrO"
+access_token_secret="7lRZSvtwo2bh8uuM3J2wJbb3rFSSBYy7zfR1u8H30Fb27"
+"""
 consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
 consumer_secret = "T0QCvEWdUm2PakSKDsho9usdvaPWZsUB0hhB2XE1JwgwCGp7wV"
 access_token = "1252083222189498368-BZUECSVoWd6IDSWGnETwH4krVS3AHh"
 access_token_secret = "y9UNO50rhFndcMPy4S4cY5qLEcZdz6NygWyl8t0ZY7H8s"
-
+"""
 
 GEOBOX_MELBOURNE = [144.877548, -37.851203, 145.031356, -37.729655]  # https://boundingbox.klokantech.com/
 GEOBOX_AUS = [106.8, -41.9, 154.9, -11.5]
@@ -40,7 +45,10 @@ except:
 sa = sentiment_analyzer.SentimentAnalyzer()
 
 def processPage(page,zone_name,keywords,save_to_db,return_data,db_name):
-    db = tweetsDB(db_name)
+    if (save_to_db):
+        db = tweetsDB(db_name)
+    else:
+        db = None
     result = []
     count = 0
     for tweet in page:
@@ -55,8 +63,7 @@ def processPage(page,zone_name,keywords,save_to_db,return_data,db_name):
                                },
                       'sentiment_score':str(sentiment[0]),
                       "sentiment":sentiment[1],
-                      'zone':zone_name,
-                      'keywords':" ".join(list(map(str,keywords)))}
+                      'zone':zone_name}
         if(return_data):
             result.append(tweet_json)
         if(save_to_db):
@@ -72,15 +79,13 @@ def search(keywords=[],point_radius=[],boundingbox=[],
     # results_per_page should between 10-100
     # point_radius should be of format: [lon lat radius], radius should be less than 40km
     # bounding_box: [west_long south_lat east_long north_lat]
-    query = "lang:en "
+    query = ""
     from_date=''
     count=0
-    if(zone_name in zones.keys()):
-        point_radius = zones[zone_name]
     try:
         if (keywords):
             assert type(keywords)==list,"keywords should be a list of string"
-            query += " ".join(list(map(str,keywords)))
+            query += "("+" OR ".join(list(map(str,keywords)))+")"
         if (point_radius):
             assert len(point_radius)==3, "point_radius should be of type [lon,lat,radius]"
             query += " point_radius:["+ " ".join(list(map(str,point_radius)))+"]"
@@ -90,9 +95,12 @@ def search(keywords=[],point_radius=[],boundingbox=[],
         if (not from_date):
             d= datetime.now() + dateutil.relativedelta.relativedelta(days=-29)
             from_date = '%d%02d%02d%02d%02d'%(d.year,d.month,d.day,d.hour,d.minute)
+        query += " lang:en"
         data = []
         page_count = 0
-        for page in tweepy.Cursor(api.search_30_day, environment_name='comp90024',
+        print(query)
+        print()
+        for page in tweepy.Cursor(api.search_full_archive, environment_name='comp90024',
                                   query=query,fromDate=from_date,
                                   maxResults=results_per_page).pages():
             
@@ -112,20 +120,53 @@ def search(keywords=[],point_radius=[],boundingbox=[],
     except tweepy.TweepError as e:
         print(e)
         return
-
+"""
+#   SEARCH by Radius
+from zoneFeatures import zone_info
 for zone, pr in zones.items():
-    data = search(db_name='tweet_zone_sentiment',zone_name=zone)
+    data = search(db_name='tweet_zone_sentiment',zone_name=zone,point_radius=pr)
+
+vaccine=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown']
+data = []
+for zone in zones.keys():
+    data += search(keywords=vaccine,save_to_db=False,zone_name=zone, n=100,from_date = "202101010000")
 
 """
-vaccine=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc']
-lockdown=['lockdown']
-for word in vaccine:
-    for zone in zones.keys():
-        data = search(keywords=[word] ,db_name="tweet_keyword_sentiment",zone_name=zone, n=100)
+
+
+
 """
+#   SEARCH by BOUNDING BOX
+"""
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+def getBoundingbox(zones):
+    zoneName2boundingbox = {}
+    for zone in zones:
+        name = zone["properties"]["zone"]
+        box = zone["geometry"]["coordinates"]
+        zoneName2boundingbox[name] = [round(min(column(box[0],0)),3),round(min(column(box[0],1)),3),
+                                      round(max(column(box[0],0)),3),round(max(column(box[0],1)),3)]
+    return zoneName2boundingbox
+
+box = getBoundingbox(zone_info["features"])
+keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc']
+keywords2=['lockdown','covid', 'covid19','coronavirus','cov19']
+data = []
+for name,b in box.items():
+    data += search(keywords=keywords,save_to_db=False,zone_name=name,
+                   n=1000,from_date = "202001010000",boundingbox=b)
+    data += search(keywords=keywords2,save_to_db=False,zone_name=name,
+                   n=1000,from_date = "202001010000",boundingbox=b)
+
+# TEST 
+#q = "lockdown bounding_box:[144.86281 -37.79295 145.01112 -37.71586] lang:en"
+#record = search(keywords = keywords, save_to_db=False,n=100,from_date="202001010000",boundingbox=[144.862,-37.792,145.011,-37.715])
 
 
 
 
-
-
+# Save Result
+with open('data_syd_mel.json', 'w') as outfile:
+    json.dump(data, outfile)
