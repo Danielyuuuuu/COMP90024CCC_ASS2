@@ -1,15 +1,14 @@
 from couchdb import Server
 
 class tweetsDB():
-    dbname = "tweets"
     db = None
     count = None
-    def __init__(self,url='http://pyf:123456@172.26.128.229:5984/'):
+    def __init__(self,db_name,url='http://admin:admin@172.26.130.104:5984/'):
         s = Server(url)
-        if self.dbname in s:
-            self.db = s[self.dbname]
+        if db_name in s:
+            self.db = s[db_name]
         else:
-            self.db = s.create(self.dbname)
+            self.db = s.create(db_name)
         
     def add_record(self,json_record):
         hash_string = str(hash(json_record['id']))
@@ -41,7 +40,7 @@ class tweetsDB():
                 break
         return result
 
-    def del_db(self):
+    def del_db(self,dbname):
         for row in self.db:
             self.db.delete(self.db[row])
             
