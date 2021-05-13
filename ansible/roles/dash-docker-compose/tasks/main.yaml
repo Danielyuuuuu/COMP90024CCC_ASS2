@@ -1,5 +1,11 @@
-- name: Run couchDB docker compose
-  become: yes
-  shell: |
-    chdir=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/
-    sudo docker-compose up -d
+# - name: Run couchDB docker compose
+#   become: yes
+#   shell: |
+#     chdir=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/
+#     sudo docker-compose up -d
+
+- name: Pull dash image from Docker Hub
+  shell: sudo docker pull comp90024ass2/test-docker-compose
+
+- name: Run dash image
+  shell: sudo docker run -p 5000:5000 comp90024ass2/test-docker-compose
