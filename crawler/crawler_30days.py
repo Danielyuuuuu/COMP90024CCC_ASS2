@@ -12,6 +12,7 @@ from zoneFeatures import zone_info
 from datetime import datetime
 import dateutil.relativedelta
 from sentiment_analysis import sentiment_analyzer
+"""
 # Yanze' Key
 consumer_key="7jWNg1jENq2hvmAzqZeKvfcF4"
 consumer_secret="l9C5m1JCbdYTOTbLYWC3W8AkEE7BC3ofHkLDgos37clTxDJUyc"
@@ -22,7 +23,7 @@ consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
 consumer_secret = "T0QCvEWdUm2PakSKDsho9usdvaPWZsUB0hhB2XE1JwgwCGp7wV"
 access_token = "1252083222189498368-BZUECSVoWd6IDSWGnETwH4krVS3AHh"
 access_token_secret = "y9UNO50rhFndcMPy4S4cY5qLEcZdz6NygWyl8t0ZY7H8s"
-"""
+
 
 GEOBOX_MELBOURNE = [144.877548, -37.851203, 145.031356, -37.729655]  # https://boundingbox.klokantech.com/
 GEOBOX_AUS = [106.8, -41.9, 154.9, -11.5]
@@ -52,15 +53,23 @@ def processPage(page,zone_name,keywords,save_to_db,return_data,db_name):
     result = []
     count = 0
     for tweet in page:
+        if(tweet.place is not None):
+            p = {'type':tweet.place.place_type,
+                 'name':tweet.place.name,
+                 'fullname':tweet.place.full_name,
+                 'bounding_box':str(tweet.place.bounding_box.coordinates)
+                 }
+        else:
+            p = {'type':'',
+                 'name':'',
+                 'fullname':'',
+                 'bounding_box':''
+                 }
         sentiment = sa.predict_sentiment(tweet.text)
         tweet_json = {'id':tweet.id,
                       'created_at':str(tweet.created_at),
                       'text':tweet.text,
-                      "place":{'type':tweet.place.place_type,
-                               'name':tweet.place.name,
-                               'fullname':tweet.place.full_name,
-                               'bounding_box':str(tweet.place.bounding_box.coordinates)
-                               },
+                      "place":p,
                       'sentiment_score':str(sentiment[0]),
                       "sentiment":sentiment[1],
                       'zone':zone_name}
@@ -95,12 +104,14 @@ def search(keywords=[],point_radius=[],boundingbox=[],
         if (not from_date):
             d= datetime.now() + dateutil.relativedelta.relativedelta(days=-29)
             from_date = '%d%02d%02d%02d%02d'%(d.year,d.month,d.day,d.hour,d.minute)
+        if (zone_name):
+            query += " place:"+zone_name
         query += " lang:en"
         data = []
         page_count = 0
         print(query)
         print()
-        for page in tweepy.Cursor(api.search_full_archive, environment_name='comp90024',
+        for page in tweepy.Cursor(api.search_30_day, environment_name='comp90024',
                                   query=query,fromDate=from_date,
                                   maxResults=results_per_page).pages():
             
@@ -151,22 +162,25 @@ def getBoundingbox(zones):
     return zoneName2boundingbox
 
 box = getBoundingbox(zone_info["features"])
-keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc']
-keywords2=['lockdown','covid', 'covid19','coronavirus','cov19']
+keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown','covid', 'covid19','coronavirus','cov19']
+
+
 data = []
-for name,b in box.items():
-    data += search(keywords=keywords,save_to_db=False,zone_name=name,
-                   n=1000,from_date = "202001010000",boundingbox=b)
-    data += search(keywords=keywords2,save_to_db=False,zone_name=name,
-                   n=1000,from_date = "202001010000",boundingbox=b)
 
+for zone in box.keys():
+    data += search(keywords=keywords,save_to_db=False,zone_name=zone, n=500)
+    
+"""
 # TEST 
-#q = "lockdown bounding_box:[144.86281 -37.79295 145.01112 -37.71586] lang:en"
-#record = search(keywords = keywords, save_to_db=False,n=100,from_date="202001010000",boundingbox=[144.862,-37.792,145.011,-37.715])
+data = search(keywords=keywords,save_to_db=False,zone_name="Brisbane",n=100)
 
+q="(jab OR vaccine OR vaccination OR AstraZeneca OR Pfizer-BioNTech OR vacc) place:Melbourne lang:en"
+api.search_30_day(environment_name='comp90024',query=q)
 
+"""
 
 
 # Save Result
-with open('data_syd_mel.json', 'w') as outfile:
+with open('data_city.json', 'w') as outfile:
     json.dump(data, outfile)
+
