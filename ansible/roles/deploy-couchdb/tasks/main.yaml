@@ -1,53 +1,53 @@
-- name: Create docker proxy file
-  shell: |
-    sudo mkdir -p /etc/systemd/system/docker.service.d
-    sudo touch /etc/systemd/system/docker.service.d/http-proxy.conf
+# - name: Create docker proxy file
+#   shell: |
+#     sudo mkdir -p /etc/systemd/system/docker.service.d
+#     sudo touch /etc/systemd/system/docker.service.d/http-proxy.conf
 
-- name: Add proxy to the instance
-  become: yes
-  copy:
-    dest: /etc/systemd/system/docker.service.d/http-proxy.conf
-    content: |
-      [Service]
-      Environment="HTTP_PROXY=http://wwwproxy.unimelb.edu.au:8000/"
-      Environment="HTTPS_PROXY=http://wwwproxy.unimelb.edu.au:8000/"
-      Environment="NO_PROXY=localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
-      Environment="http_proxy=http://wwwproxy.unimelb.edu.au:8000/"
-      Environment="https_proxy=http://wwwproxy.unimelb.edu.au:8000/"
+# - name: Add proxy to the instance
+#   become: yes
+#   copy:
+#     dest: /etc/systemd/system/docker.service.d/http-proxy.conf
+#     content: |
+#       [Service]
+#       Environment="HTTP_PROXY=http://wwwproxy.unimelb.edu.au:8000/"
+#       Environment="HTTPS_PROXY=http://wwwproxy.unimelb.edu.au:8000/"
+#       Environment="NO_PROXY=localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
+#       Environment="http_proxy=http://wwwproxy.unimelb.edu.au:8000/"
+#       Environment="https_proxy=http://wwwproxy.unimelb.edu.au:8000/"
 
 
-- name: Create another docker proxy file
-  shell: |
-    sudo mkdir -p /home/ubuntu/.docker
-    sudo touch /home/ubuntu/.docker/config.json
+# - name: Create another docker proxy file
+#   shell: |
+#     sudo mkdir -p /home/ubuntu/.docker
+#     sudo touch /home/ubuntu/.docker/config.json
 
-- name: Add another proxy to the instance
-  become: yes
-  copy:
-    dest: /home/ubuntu/.docker/config.json
-    content: |
-      {
-        "proxies":
-        {
-          "default":
-          {
-            "httpProxy": "http://wwwproxy.unimelb.edu.au:8000/",
-            "httpsProxy": "http://wwwproxy.unimelb.edu.au:8000/",
-            "noProxy": "localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
-          }
-        }
-      }
+# - name: Add another proxy to the instance
+#   become: yes
+#   copy:
+#     dest: /home/ubuntu/.docker/config.json
+#     content: |
+#       {
+#         "proxies":
+#         {
+#           "default":
+#           {
+#             "httpProxy": "http://wwwproxy.unimelb.edu.au:8000/",
+#             "httpsProxy": "http://wwwproxy.unimelb.edu.au:8000/",
+#             "noProxy": "localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
+#           }
+#         }
+#       }
 
-- name: Stop docker
-  become: yes
-  shell: sudo systemctl stop docker
+# - name: Stop docker
+#   become: yes
+#   shell: sudo systemctl stop docker
 
-- name: Reload docker daemon
-  shell: sudo systemctl daemon-reload
+# - name: Reload docker daemon
+#   shell: sudo systemctl daemon-reload
 
-- name: Start docker
-  become: yes
-  shell: sudo systemctl start docker
+# - name: Start docker
+#   become: yes
+#   shell: sudo systemctl start docker
 
 - name: Start a container with a couchdb
   become: yes
