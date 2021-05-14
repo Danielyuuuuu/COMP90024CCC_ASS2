@@ -48,6 +48,7 @@ def parseTweet(status,analyzer,zone_name,keywords):
              }
     sentiment = analyzer.predict_sentiment(status.text)
     tweet_json = {'id':status.id,
+                 'user_id':status.user.id,
                  'created_at':str(status.created_at),
                  'text':status.text,
                  "place":p,

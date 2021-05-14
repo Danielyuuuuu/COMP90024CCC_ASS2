@@ -90,6 +90,7 @@ class MyStreamListener(tweepy.StreamListener):
         print(status_code)
         if status_code == 420:
             # returning False in on_error disconnects the stream
+            time.sleep(60)
             return False
 
 box= getBoundingbox(zone_info["features"])
@@ -97,9 +98,21 @@ box_1d = [j for sub in box.values() for j in sub]
 
 myUserListener = UserTimelineListener(api,words_arr,box.keys())
 myStreamListener = MyStreamListener(words_arr,box.keys(),myUserListener)
-myStream = tweepy.Stream(auth, listener=myStreamListener)
-myStream.filter(locations=box_1d, languages=["en"])
+while True:
+    try:
+        myStream = tweepy.Stream(auth, listener=myStreamListener)
+        myStream.filter(locations=box_1d, languages=["en"])
+    except Exception as e:
+        time.sleep(5)
+        print(e)
+    
 """
-with open('test.json', 'w') as outfile:
+with open('data_streaming.json', 'w') as outfile:
     json.dump(data, outfile)
 """
+import jsonlines
+with jsonlines.open('data_streaming.jsonl', mode='a') as writer:
+    for d in data:
+        writer.write(d)
+
+
