@@ -5,7 +5,7 @@ from sentiment_analysis import sentiment_analyzer
 #import geopandas
 from crawler_keywords import words_arr
 from zoneFeatures import zone_info, getBoundingbox
-from TwitterProcessor import filtKeywords, filtLocations
+from TwitterProcessor import filtKeywords, filtLocations, parseTweet
 import time
 
 consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
@@ -34,7 +34,7 @@ except:
 
 # connect database
 #db = tweetsDB()
-#sa = sentiment_analyzer.SentimentAnalyzer()
+sa = sentiment_analyzer.SentimentAnalyzer()
 data=[]
 
 class UserTimelineListener():
@@ -56,28 +56,28 @@ class UserTimelineListener():
             return
         print("searching user:",userid,"filtering ",len(tweets)," tweets")
         for tweet in tweets:
-            a = filtKeywords(tweet,self.keywords)
-            if(a is None):
+            words = filtKeywords(tweet,self.keywords)
+            if(words is None):
                 continue
-            a = filtLocations(tweet,self.locations)
-            if(a is None):
+            zone = filtLocations(tweet,self.locations)
+            if(zone is None):
                 continue
-            data.append(tweet)
+            data.append(parseTweet(tweet,sa,zone,words))
             print("-----------new tweet found----------")
             
 
 class MyStreamListener(tweepy.StreamListener):
-    def __init__(self,keywords,userListener):
+    def __init__(self,keywords,locations,userListener):
         super().__init__()
         self.keywords = keywords
         self.userListener = userListener
-
+        self.locations = locations
     def on_status(self, status):
         if(status.place is not None):
-            
-            a = filtKeywords(status,self.keywords)
-            if(a is not None):
-                data.append(status)
+            words = filtKeywords(status,self.keywords)
+            zone = filtLocations(status,self.locations)
+            if(words is not None and zone is not None):
+                data.append(parseTweet(status,sa,zone,words))
                 print("-----------new tweet found----------")
             try:
                 self.userListener.searchUser(status.user.id)
@@ -96,7 +96,10 @@ box= getBoundingbox(zone_info["features"])
 box_1d = [j for sub in box.values() for j in sub]
 
 myUserListener = UserTimelineListener(api,words_arr,box.keys())
-myStreamListener = MyStreamListener(words_arr,myUserListener)
+myStreamListener = MyStreamListener(words_arr,box.keys(),myUserListener)
 myStream = tweepy.Stream(auth, listener=myStreamListener)
 myStream.filter(locations=box_1d, languages=["en"])
-
+"""
+with open('test.json', 'w') as outfile:
+    json.dump(data, outfile)
+"""
