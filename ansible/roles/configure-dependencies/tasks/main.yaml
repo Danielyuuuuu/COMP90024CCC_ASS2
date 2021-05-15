@@ -290,6 +290,7 @@
   become: yes
   shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
   async: 45
+  ignore_errors: yes
 
 # - name: Add Docker apt key if failed
 #   shell: "curl -sSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
@@ -330,12 +331,17 @@
 #   become: yes
 #   shell: sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-
-- name: Install python docker
-  become: yes
-  pip:  
-    name: ['docker']
-    state: latest
+- name: Update and upgrade apt packages
+  become: true
+  apt:
+    upgrade: yes
+    update_cache: yes
+    
+# - name: Install python docker
+#   become: yes
+#   pip:  
+#     name: ['docker']
+#     state: latest
 
 - name: Install docker
   become: yes
