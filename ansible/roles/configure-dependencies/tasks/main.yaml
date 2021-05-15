@@ -3,7 +3,7 @@
 #   become: true
 #   apt:
 #     upgrade: yes
-#     # update_cache: yes
+#     update_cache: yes
 
 # Install python
 - name: Install pip
@@ -253,6 +253,12 @@
 #     gnupg \
 #     lsb-release
 
+- name: Update and upgrade apt packages
+  become: true
+  apt:
+    upgrade: yes
+    update_cache: yes
+
 - name: Set up the repository
   become: yes
   apt:
@@ -266,15 +272,25 @@
 #     url: https://download.docker.com/linux/ubuntu/gpg
 #     dest: /usr/share/keyrings/docker-archive-keyring.gpg
 
-- name: Add Docker's official apt key.
-  become: yes
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-    state: present
-  register: add_key
-  ignore_errors: true
+# - name: Add Docker's official apt key.
+#   become: yes
+#   apt_key:
+#     url: https://download.docker.com/linux/ubuntu/gpg
+#     id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+#     state: present
+#     update_cache: yes
+#   register: add_key
+#   ignore_errors: true
 
+- name: Add Docker GPG key
+  become: yes
+  apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+  
+# - name: Add Docker apt key if failed
+#   shell: "curl -sSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
+#   args:
+#     warn: no
+#   when: add_key|failed  
 
 # - name: Add Docker’s official GPG key
 #   become: yes
@@ -309,18 +325,19 @@
 #   become: yes
 #   shell: sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-- name: Install docker
-  become: yes
-  apt:
-    name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
-    state: latest
-    # update_cache: yes
 
 - name: Install python docker
   become: yes
   pip:  
     name: ['docker']
     state: latest
+
+- name: Install docker
+  become: yes
+  apt:
+    name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
+    state: latest
+    update_cache: yes
 
 - name: Create docker proxy file
   shell: |
