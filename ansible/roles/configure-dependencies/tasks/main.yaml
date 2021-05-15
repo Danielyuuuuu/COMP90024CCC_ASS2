@@ -337,11 +337,11 @@
     upgrade: yes
     update_cache: yes
     
-# - name: Install python docker
-#   become: yes
-#   pip:  
-#     name: ['docker']
-#     state: latest
+- name: Install python docker
+  become: yes
+  pip:  
+    name: ['docker']
+    state: latest
 
 - name: Install docker
   become: yes
@@ -390,11 +390,23 @@
         }
       }
 
+- name: Create the docker group
+  become: yes
+  shell: sudo groupadd docker
+  async: 45
+  ignore_errors: yes
+
 - name: Add root to the docker group
   become: yes
   shell: |
     sudo usermod -aG docker root
     sudo usermod -aG docker ubuntu
+
+- name: Activate the changes to groups
+  become: yes
+  shell: newgrp docker 
+  async: 45
+  ignore_errors: yes
 
 - name: Stop docker
   become: yes
