@@ -282,10 +282,15 @@
 #   register: add_key
 #   ignore_errors: true
 
+# - name: Add Docker GPG key
+#   become: yes
+#   apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+
 - name: Add Docker GPG key
   become: yes
-  apt_key: url=https://download.docker.com/linux/ubuntu/gpg
-  
+  shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  async: 45
+
 # - name: Add Docker apt key if failed
 #   shell: "curl -sSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
 #   args:
