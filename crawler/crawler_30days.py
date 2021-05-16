@@ -12,7 +12,13 @@ from zoneFeatures import zone_info
 from datetime import datetime
 import dateutil.relativedelta
 from sentiment_analysis import sentiment_analyzer
-
+"""
+# Yanze' Key
+consumer_key="7jWNg1jENq2hvmAzqZeKvfcF4"
+consumer_secret="l9C5m1JCbdYTOTbLYWC3W8AkEE7BC3ofHkLDgos37clTxDJUyc"
+access_token="1366203266162253825-CvOHBqKvMEqbN9iOpr975BOg6OttrO"
+access_token_secret="7lRZSvtwo2bh8uuM3J2wJbb3rFSSBYy7zfR1u8H30Fb27"
+"""
 consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
 consumer_secret = "T0QCvEWdUm2PakSKDsho9usdvaPWZsUB0hhB2XE1JwgwCGp7wV"
 access_token = "1252083222189498368-BZUECSVoWd6IDSWGnETwH4krVS3AHh"
@@ -47,19 +53,26 @@ def processPage(page,zone_name,keywords,save_to_db,return_data,db_name):
     result = []
     count = 0
     for tweet in page:
+        if(tweet.place is not None):
+            p = {'type':tweet.place.place_type,
+                 'name':tweet.place.name,
+                 'fullname':tweet.place.full_name,
+                 'bounding_box':str(tweet.place.bounding_box.coordinates)
+                 }
+        else:
+            p = {'type':'',
+                 'name':'',
+                 'fullname':'',
+                 'bounding_box':''
+                 }
         sentiment = sa.predict_sentiment(tweet.text)
         tweet_json = {'id':tweet.id,
                       'created_at':str(tweet.created_at),
                       'text':tweet.text,
-                      "place":{'type':tweet.place.place_type,
-                               'name':tweet.place.name,
-                               'fullname':tweet.place.full_name,
-                               'bounding_box':str(tweet.place.bounding_box.coordinates)
-                               },
+                      "place":p,
                       'sentiment_score':str(sentiment[0]),
                       "sentiment":sentiment[1],
-                      'zone':zone_name,
-                      'keywords':" ".join(list(map(str,keywords)))}
+                      'zone':zone_name}
         if(return_data):
             result.append(tweet_json)
         if(save_to_db):
@@ -91,12 +104,14 @@ def search(keywords=[],point_radius=[],boundingbox=[],
         if (not from_date):
             d= datetime.now() + dateutil.relativedelta.relativedelta(days=-29)
             from_date = '%d%02d%02d%02d%02d'%(d.year,d.month,d.day,d.hour,d.minute)
+        if (zone_name):
+            query += " place:"+zone_name
         query += " lang:en"
         data = []
         page_count = 0
         print(query)
         print()
-        for page in tweepy.Cursor(api.search_full_archive, environment_name='comp90024full',
+        for page in tweepy.Cursor(api.search_30_day, environment_name='comp90024',
                                   query=query,fromDate=from_date,
                                   maxResults=results_per_page).pages():
             
@@ -142,25 +157,30 @@ def getBoundingbox(zones):
     for zone in zones:
         name = zone["properties"]["zone"]
         box = zone["geometry"]["coordinates"]
-        zoneName2boundingbox[name] = [round(min(column(box[0],0)),5),round(min(column(box[0],1)),5),
-                                      round(max(column(box[0],0)),5),round(max(column(box[0],1)),5)]
+        zoneName2boundingbox[name] = [round(min(column(box[0],0)),3),round(min(column(box[0],1)),3),
+                                      round(max(column(box[0],0)),3),round(max(column(box[0],1)),3)]
     return zoneName2boundingbox
 
 box = getBoundingbox(zone_info["features"])
-keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown']
+keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown','covid', 'covid19','coronavirus','cov19']
+
+
 data = []
-for name,b in box.items():
-    data += search(keywords=keywords,save_to_db=False,zone_name=name,
-                   n=100,from_date = "202101010000",boundingbox=b)
+
+for zone in box.keys():
+    data += search(keywords=keywords,save_to_db=False,zone_name=zone, n=500)
+    
 """
 # TEST 
-q = "lockdown bounding_box:[144.86281 -37.79295 145.01112 -37.71586] lang:en"
-record = api.search_full_archive(environment_name='comp90024full',query=q,fromDate = "202101010000")
+data = search(keywords=keywords,save_to_db=False,zone_name="Brisbane",n=100)
+
+q="(jab OR vaccine OR vaccination OR AstraZeneca OR Pfizer-BioNTech OR vacc) place:Melbourne lang:en"
+api.search_30_day(environment_name='comp90024',query=q)
 
 """
 
-"""
+
 # Save Result
-with open('data.json', 'w') as outfile:
-    json.dump(data, outfile
-"""
+with open('data_city.json', 'w') as outfile:
+    json.dump(data, outfile)
+

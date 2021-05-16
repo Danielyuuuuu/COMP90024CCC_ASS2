@@ -38,12 +38,24 @@
     name: ['couchdb']
     state: latest
 
-# Install docker
-- name: Install docker
-  become: yes
-  apt:
-    name: ['docker']
-    state:  latest
+# # Install docker
+# - name: Install docker
+#   become: yes
+#   apt:
+#     name: ['docker']
+#     state:  latest
+
+# - name: Install docker.io
+#   become: yes
+#   apt:
+#     name: ['docker.io']
+#     state: latest
+
+# - name: Install docker-compose
+#   become: yes
+#   apt:
+#     name: ['docker-compose']
+#     state: latest
 
 
 # Install pandas
@@ -116,3 +128,102 @@
     name: ['p7zip-full']
     state: latest
     update_cache: yes
+
+# - name: Update apt and install package to allow apt to use a repository over HTTPS
+#   shell: |
+#     sudo apt-get update
+#     sudo apt-get install \
+#     apt-transport-https \
+#     ca-certificates \
+#     curl \
+#     gnupg \
+#     lsb-release
+
+# - name: Add Docker’s official GPG key
+#   shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# - name: Set up stable repository
+#   shell: |
+#     echo \
+#     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+#     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# - name: Kill process
+#     shell: sudo kill 21356
+
+# - name: Uninstall old docker
+#   shell: sudo apt-get remove docker docker.io containerd runc
+
+# - name: Install docker
+#   become: yes
+#   apt:
+#     name: ['docker-ce', 'docker-ce-cli', containerd.io]
+#     state: latest
+#     update_cache: yes
+
+# - name: Create the docker group
+#   shell: sudo groupadd docker
+
+# - name: Add root to the docker group
+#   become: yes
+#   shell: |
+#     sudo usermod -aG docker root
+#     sudo usermod -aG docker ubuntu
+
+# - name: Activate the changes to groups
+#   become: yes
+#   shell: newgrp docker 
+
+
+- name: install dependency
+  become: yes
+  apt:
+    name: "{{item}}"
+    state: present
+    update_cache: yes
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+
+- name: add GPG key
+  become: yes
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: add docker repository to apt
+  become: yes
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu bionic stable
+    state: present
+
+- name: install docker
+  become: yes
+  apt:
+    name: "{{item}}"
+    state: latest
+    update_cache: yes
+  loop:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-compose
+
+- name: Check if docker has started
+  become: yes
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+# - name: Create the docker group
+#   shell: sudo groupadd docker
+
+- name: Add root to the docker group
+  become: yes
+  shell: |
+    sudo usermod -aG docker root
+    sudo usermod -aG docker ubuntu
