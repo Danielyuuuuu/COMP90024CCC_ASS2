@@ -3,7 +3,7 @@ from couchdb import Server
 class tweetsDB():
     db = None
     count = None
-    def __init__(self,db_name,url='http://admin:admin@172.26.130.104:5984/'):
+    def __init__(self,db_name,url='http://admin:password@172.26.131.97:5984/'):
         s = Server(url)
         if db_name in s:
             self.db = s[db_name]

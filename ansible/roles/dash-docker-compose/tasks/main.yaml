@@ -4,6 +4,13 @@
 #     chdir=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/
 #     sudo docker-compose up -d
 
+<<<<<<< HEAD
+- name: Pull dash image from Docker Hub
+  shell: sudo docker pull comp90024ass2/test-docker-compose
+
+- name: Run dash image
+  shell: sudo docker run -p 5000:5000 comp90024ass2/test-docker-compose
+=======
 - name: Update and upgrade apt packages
   become: true
   apt:
@@ -32,3 +39,4 @@
 
 
 
+>>>>>>> 0fb6052686848289e5a3fef9fab5737886ad90ef
