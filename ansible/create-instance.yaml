@@ -3,6 +3,7 @@
     ansible_python_interpreter: /usr/local/bin/python3
   vars_files:
     - host_vars/mrc.yaml
+    - host_vars/config.yaml
   gather_facts: true
 
   roles:
