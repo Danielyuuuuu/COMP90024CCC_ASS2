@@ -4,11 +4,13 @@ Created on Sun May  2 08:16:58 2021
 
 @author: Windwalker
 """
-from database import tweetsDB
-db = tweetsDB("tweets_all")
-db1 = tweetsDB("tweets_keywords")
-print(db1.get_num_record())
-# retrieve the first 5 record in the database
-data = db1.get_data(from_index=0,to_index=5,get_all=False)
-print(data[0])
-
+from database_cloudant import CloudantDB
+db1 = CloudantDB("tweets_keywords")
+db2 = CloudantDB("tweets_no_keywords")
+db3 = CloudantDB("tweets_raw")
+print(len(db1.get_data()))
+print(len(db2.get_data()))
+print(len(db3.get_data()))
+db1.close()
+db2.close()
+db3.close()
