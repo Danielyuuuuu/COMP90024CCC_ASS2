@@ -420,3 +420,15 @@ zone_info = {
     }
   ]
 }
+
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+def getBoundingbox(zones):
+    zoneName2boundingbox = {}
+    for zone in zones:
+        name = zone["properties"]["zone"]
+        box = zone["geometry"]["coordinates"]
+        zoneName2boundingbox[name] = [round(min(column(box[0],0)),3),round(min(column(box[0],1)),3),
+                                      round(max(column(box[0],0)),3),round(max(column(box[0],1)),3)]
+    return zoneName2boundingbox

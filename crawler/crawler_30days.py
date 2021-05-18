@@ -8,10 +8,14 @@ import tweepy
 import json
 from database import tweetsDB
 import tweepy
-from zoneFeatures import zone_info
+from zoneFeatures import zone_info, getBoundingbox
 from datetime import datetime
 import dateutil.relativedelta
 from sentiment_analysis import sentiment_analyzer
+<<<<<<< HEAD
+=======
+from crawler_keywords import words_arr
+>>>>>>> 0fb6052686848289e5a3fef9fab5737886ad90ef
 """
 # Yanze' Key
 consumer_key="7jWNg1jENq2hvmAzqZeKvfcF4"
@@ -149,6 +153,7 @@ for zone in zones.keys():
 """
 #   SEARCH by BOUNDING BOX
 """
+<<<<<<< HEAD
 def column(matrix, i):
     return [row[i] for row in matrix]
 
@@ -164,11 +169,19 @@ def getBoundingbox(zones):
 box = getBoundingbox(zone_info["features"])
 keywords=['jab','vaccine','vaccination','AstraZeneca','Pfizer-BioNTech','vacc','lockdown','covid', 'covid19','coronavirus','cov19']
 
+=======
+
+box = getBoundingbox(zone_info["features"])
+>>>>>>> 0fb6052686848289e5a3fef9fab5737886ad90ef
 
 data = []
 
 for zone in box.keys():
+<<<<<<< HEAD
     data += search(keywords=keywords,save_to_db=False,zone_name=zone, n=500)
+=======
+    data += search(keywords=words_arr,save_to_db=False,zone_name=zone, n=500)
+>>>>>>> 0fb6052686848289e5a3fef9fab5737886ad90ef
     
 """
 # TEST 
