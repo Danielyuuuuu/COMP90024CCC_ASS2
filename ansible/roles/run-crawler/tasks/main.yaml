@@ -1,0 +1,14 @@
+# - set_fact:
+#     fs_ip_addr: "{{ (lookup('file', '/inventory/host.ini').splitlines()|
+#                     list|
+#                     select('search', 'database')|
+#                     list|
+#                     first).split().0 }}"
+
+- name: Run crawler
+  shell: |
+    cd /home/ubuntu/COMPCOMP90024CCC_ASS2/crawler
+    python3 crawler_stream.py admin password http://172.26.131.94:5984
+  async: 45
+  # ignore_errors: yes
+  

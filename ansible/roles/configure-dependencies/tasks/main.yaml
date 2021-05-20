@@ -415,3 +415,35 @@
 - name: Run docker hello-world
   become: yes
   shell: sudo docker run hello-world
+
+
+- name: Install tweepy
+  become: yes
+  pip:
+    name: ['tweepy']
+    state: latest
+
+# - name: Install json
+#   become: yes
+#   apt:
+#     name: ['json']
+#     state: latest
+#     update_cache: yes
+
+- name: Install shapely
+  become: yes
+  pip:
+    name: ['shapely']
+    state: latest
+
+- name: Install jsonlines
+  become: yes
+  pip:
+    name: ['jsonlines']
+    state: latest
+
+- name: Install cloudant
+  become: yes
+  pip:
+    name: ['cloudant']
+    state: latest
