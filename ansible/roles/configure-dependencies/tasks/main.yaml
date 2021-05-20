@@ -180,54 +180,6 @@
 #   shell: newgrp docker 
 
 
-<<<<<<< HEAD
-- name: install dependency
-  become: yes
-  apt:
-    name: "{{item}}"
-    state: present
-    update_cache: yes
-  loop:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - gnupg-agent
-    - software-properties-common
-
-- name: add GPG key
-  become: yes
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-
-- name: add docker repository to apt
-  become: yes
-  apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu bionic stable
-    state: present
-
-- name: install docker
-  become: yes
-  apt:
-    name: "{{item}}"
-    state: latest
-    update_cache: yes
-  loop:
-    - docker-ce
-    - docker-ce-cli
-    - containerd.io
-    - docker-compose
-
-- name: Check if docker has started
-  become: yes
-  service:
-    name: docker
-    state: started
-    enabled: yes
-
-# - name: Create the docker group
-#   shell: sudo groupadd docker
-=======
 # - name: install dependency
 #   become: yes
 #   apt:
@@ -363,7 +315,6 @@
     echo \
     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
 # - name: sudo apt-get update
 #   become: yes
 #   shell: sudo apt-get update
@@ -402,7 +353,6 @@
   shell: |
     sudo mkdir -p /etc/systemd/system/docker.service.d
     sudo touch /etc/systemd/system/docker.service.d/http-proxy.conf
-
 - name: Add proxy to the instance
   become: yes
   copy:
@@ -414,13 +364,10 @@
       Environment="NO_PROXY=localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
       Environment="http_proxy=http://wwwproxy.unimelb.edu.au:8000/"
       Environment="https_proxy=http://wwwproxy.unimelb.edu.au:8000/"
-
-
 - name: Create another docker proxy file
   shell: |
     sudo mkdir -p /home/ubuntu/.docker
     sudo touch /home/ubuntu/.docker/config.json
-
 - name: Add another proxy to the instance
   become: yes
   copy:
@@ -437,23 +384,17 @@
           }
         }
       }
-
 - name: Create the docker group
   become: yes
   shell: sudo groupadd docker
   async: 45
   ignore_errors: yes
->>>>>>> 0fb6052686848289e5a3fef9fab5737886ad90ef
 
 - name: Add root to the docker group
   become: yes
   shell: |
     sudo usermod -aG docker root
-<<<<<<< HEAD
     sudo usermod -aG docker ubuntu
-=======
-    sudo usermod -aG docker ubuntu
-
 - name: Activate the changes to groups
   become: yes
   shell: newgrp docker 
@@ -474,4 +415,3 @@
 - name: Run docker hello-world
   become: yes
   shell: sudo docker run hello-world
->>>>>>> 0fb6052686848289e5a3fef9fab5737886ad90ef
