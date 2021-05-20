@@ -42,3 +42,9 @@
   template:
     src: instance-ip.j2
     dest: ./inventory/hosts.ini
+
+- name: create file
+  become: yes
+  template:
+    src: instance-ip.j2
+    dest: ./inventory/hosts_backup_file.ini
