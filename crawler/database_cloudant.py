@@ -11,7 +11,7 @@ from cloudant.client import CouchDB
 
 class CloudantDB():
     def __init__(self,db_name,username = USERNAME,password=PASSWORD,url = URL):
-        self.client = CouchDB(USERNAME, PASSWORD, url=URL, connect=True)
+        self.client = CouchDB(username, password, url=URL, connect=True)
         self.session = self.client.session()
         self.curDB = None
         print('Username: {0}'.format(self.session['userCtx']['name']))
