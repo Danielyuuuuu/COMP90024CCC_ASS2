@@ -49,24 +49,24 @@ def main():
     f.write(hosts[::-1][i] + "\n")
     assigned_hosts.append(hosts[::-1][i])
 
-  f.write("\n[backend]\n") 
-  hosts_for_backend = []
+  # f.write("\n[backend]\n") 
+  # hosts_for_backend = []
 
-  if len(hosts) > len(assigned_hosts):
-    for host in hosts:
-      if num_for_backend > len(hosts_for_backend):
-        if host not in assigned_hosts and host not in hosts_for_backend:
-          hosts_for_backend.append(host)
-      else:
-        break
+  # if len(hosts) > len(assigned_hosts):
+  #   for host in hosts:
+  #     if num_for_backend > len(hosts_for_backend):
+  #       if host not in assigned_hosts and host not in hosts_for_backend:
+  #         hosts_for_backend.append(host)
+  #     else:
+  #       break
 
-  while num_for_backend > len(hosts_for_backend):
-    host = random.choice(hosts)
-    if host not in hosts_for_backend:
-      hosts_for_backend.append(host)
+  # while num_for_backend > len(hosts_for_backend):
+  #   host = random.choice(hosts)
+  #   if host not in hosts_for_backend:
+  #     hosts_for_backend.append(host)
 
-  for host in hosts_for_backend:
-    f.write(host + "\n")
+  # for host in hosts_for_backend:
+  #   f.write(host + "\n")
 
   f.write("\n[database]\n") 
   if len(hosts) > len(assigned_hosts):
