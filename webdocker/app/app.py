@@ -1,51 +1,84 @@
 from dash.dependencies import Output, Input, State
-import dash_bootstrap_components as dbc
+# import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
 from flask import Flask
 import pandas as pd
 import dash
+from dotenv import load_dotenv, find_dotenv
+from pathlib import Path
+import os
+
+env_path = Path('./web-variables.env')
+load_dotenv(dotenv_path=env_path, verbose=True)
+
+ADDRESS = os.getenv("COUCHDB_ADDRESS")
+PX_TOKEN = os.getenv("PXTOKEN")
+
+px.set_mapbox_access_token(PX_TOKEN)
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 server = Flask(__name__)
-app = dash.Dash(server=server, external_stylesheets=[dbc.themes.FLATLY])
-app.title = 'Dashboard'
 
-df = pd.read_csv('https://plotly.github.io/datasets/country_indicators.csv')
 
-available_indicators = df['Indicator Name'].unique()
+app = dash.Dash(server=server, external_stylesheets=external_stylesheets)
+app.title = 'Australia & Twitter Analyse'
+
+infodf = pd.read_csv("./zone_stats.csv",index_col=0)
+geodf = pd.read_csv("./target_zones.csv",index_col=0)[["zone","center_longitude", "center_latitude"]]
+mapdf = pd.merge(geodf,infodf,how='inner',on='zone')
+columns = ["Zone","lon", "lat", "Overseas Rate", "Average Study Years", "Christian Ratio",\
+              "Islam Ratio", "Hindo Ratio", "No-Religon Ratio", "Median Age", "Median Total FAM INC Weekly"]
+mapdf.columns=columns
+att = columns[3:]
+
+
+corrdf = mapdf[["Zone","Overseas Rate", "Average Study Years", "Christian Ratio",\
+              "Islam Ratio", "Hindo Ratio", "No-Religon Ratio", "Median Age", "Median Total FAM INC Weekly"]].corr()
+corr_fig = px.imshow(corrdf,color_continuous_scale="rdbu", range_color=[-1,1], title="Background Inner Correlation")
+corr_fig.update_layout({"height": 600})
 
 app.layout = html.Div([
+    html.Div(ADDRESS),
+    # our graph
     html.Div([
-
         html.Div([
+            html.Div("Map Bubble Color:"),
             dcc.Dropdown(
-                id='crossfilter-xaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Fertility rate, total (births per woman)'
+                id='Map Color',
+                options=[{'label': i, 'value': i} for i in att],
+                value='Overseas Rate'
             ),
-            dcc.RadioItems(
-                id='crossfilter-xaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
         ],
-        style={'width': '49%', 'display': 'inline-block'}),
+        style={'width': '25%', 'display': 'inline-block','padding': '10px 5px'}),
 
         html.Div([
+            html.Div("Map Bubble Size:"),
             dcc.Dropdown(
-                id='crossfilter-yaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
+                id='Map Size',
+                options=[{'label': i, 'value': i} for i in att],
+                value='Overseas Rate'
+            ),
+        ],
+        style={'width': '25%', 'display': 'inline-block','padding': '10px 5px'}),
+
+        html.Div([
+            html.Div("Twitter Analyse"),
+            dcc.RadioItems(
+                id='crossfilter-yaxis-type2',
+                options=[{'label': i, 'value': i} for i in ['Key1', 'Key2']],
+                value='Key1',
+                labelStyle={'display': 'inline-block'}
+            ),
+            dcc.Dropdown(
+                id='crossfilter-yaxis-column1',
+                options=[{'label': i, 'value': i} for i in att],
                 value='Life expectancy at birth, total (years)'
             ),
-            dcc.RadioItems(
-                id='crossfilter-yaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
-        ], style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
+
+        ], style={'width': '39%', 'float': 'right', 'display': 'inline-block'})
     ], style={
         'borderBottom': 'thin lightgrey solid',
         'backgroundColor': 'rgb(250, 250, 250)',
@@ -54,95 +87,32 @@ app.layout = html.Div([
 
     html.Div([
         dcc.Graph(
-            id='crossfilter-indicator-scatter',
-            hoverData={'points': [{'customdata': 'Japan'}]}
+            id='Background Map'
         )
-    ], style={'width': '49%', 'display': 'inline-block', 'padding': '0 20'}),
+    ], style={'width': '55%',  'display': 'inline-block', 'padding': '0 20'}),
     html.Div([
-        dcc.Graph(id='x-time-series'),
-        dcc.Graph(id='y-time-series'),
-    ], style={'display': 'inline-block', 'width': '49%'}),
-
-    html.Div(dcc.Slider(
-        id='crossfilter-year--slider',
-        min=df['Year'].min(),
-        max=df['Year'].max(),
-        value=df['Year'].max(),
-        marks={str(year): str(year) for year in df['Year'].unique()},
-        step=None
-    ), style={'width': '49%', 'padding': '0px 20px 20px 20px'})
+        dcc.Graph(
+            id='background correlation',
+            figure=corr_fig
+        )
+    ], style={'width': '55%',  'display': 'inline-block', 'padding': '0 20'}),
 ])
 
-
 @app.callback(
-    dash.dependencies.Output('crossfilter-indicator-scatter', 'figure'),
-    [dash.dependencies.Input('crossfilter-xaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-xaxis-type', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-type', 'value'),
-     dash.dependencies.Input('crossfilter-year--slider', 'value')])
-def update_graph(xaxis_column_name, yaxis_column_name,
-                 xaxis_type, yaxis_type,
-                 year_value):
-    dff = df[df['Year'] == year_value]
+    dash.dependencies.Output('Background Map', 'figure'),
+    [dash.dependencies.Input('Map Color', 'value'),
+     dash.dependencies.Input('Map Size', 'value')])
+def updata_map(color, size):
+    map_center = {}
+    map_center["lon"] = 135
+    map_center["lat"] = -32
+    map_fig = px.scatter_mapbox(
+        mapdf, lat="lat", lon="lon",hover_name="Zone", color=color, size=size, color_continuous_scale="redor",
+        zoom=3.3, center=map_center, title="Backgroud Map"
+        )
+    map_fig.update_layout({"height": 700})
+    return map_fig
 
-    fig = px.scatter(x=dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
-            y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
-            hover_name=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name']
-            )
-
-    fig.update_traces(customdata=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'])
-
-    fig.update_xaxes(title=xaxis_column_name, type='linear' if xaxis_type == 'Linear' else 'log')
-
-    fig.update_yaxes(title=yaxis_column_name, type='linear' if yaxis_type == 'Linear' else 'log')
-
-    fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
-
-    return fig
-
-
-def create_time_series(dff, axis_type, title):
-
-    fig = px.scatter(dff, x='Year', y='Value')
-
-    fig.update_traces(mode='lines+markers')
-
-    fig.update_xaxes(showgrid=False)
-
-    fig.update_yaxes(type='linear' if axis_type == 'Linear' else 'log')
-
-    fig.add_annotation(x=0, y=0.85, xanchor='left', yanchor='bottom',
-                       xref='paper', yref='paper', showarrow=False, align='left',
-                       bgcolor='rgba(255, 255, 255, 0.5)', text=title)
-
-    fig.update_layout(height=225, margin={'l': 20, 'b': 30, 'r': 10, 't': 10})
-
-    return fig
-
-
-@app.callback(
-    dash.dependencies.Output('x-time-series', 'figure'),
-    [dash.dependencies.Input('crossfilter-indicator-scatter', 'hoverData'),
-     dash.dependencies.Input('crossfilter-xaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-xaxis-type', 'value')])
-def update_y_timeseries(hoverData, xaxis_column_name, axis_type):
-    country_name = hoverData['points'][0]['customdata']
-    dff = df[df['Country Name'] == country_name]
-    dff = dff[dff['Indicator Name'] == xaxis_column_name]
-    title = '<b>{}</b><br>{}'.format(country_name, xaxis_column_name)
-    return create_time_series(dff, axis_type, title)
-
-
-@app.callback(
-    dash.dependencies.Output('y-time-series', 'figure'),
-    [dash.dependencies.Input('crossfilter-indicator-scatter', 'hoverData'),
-     dash.dependencies.Input('crossfilter-yaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-type', 'value')])
-def update_x_timeseries(hoverData, yaxis_column_name, axis_type):
-    dff = df[df['Country Name'] == hoverData['points'][0]['customdata']]
-    dff = dff[dff['Indicator Name'] == yaxis_column_name]
-    return create_time_series(dff, axis_type, yaxis_column_name)
 
 
 if __name__ == '__main__':
