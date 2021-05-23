@@ -8,6 +8,8 @@ USERNAME='admin'
 PASSWORD = 'password'
 URL = 'http://172.26.131.97:5984'
 from cloudant.client import CouchDB
+from cloudant.design_document import DesignDocument
+from cloudant.view import View
 
 class CloudantDB():
     def __init__(self,db_name,username = USERNAME,password=PASSWORD,url = URL):
@@ -93,3 +95,53 @@ class CloudantDB():
         all_dbs = self.client.all_dbs()
         print('Databases: {0}'.format(all_dbs))
         return all_dbs
+
+
+def get_data_summary(db="covid",viewType="month",startkey="2020-10",mode = "mean"):
+    if(db=="covid"):
+        db = CloudantDB('tweets_covid')
+    elif(db=="vaccine"):
+        db= CloudantDB("tweets_vaccine")
+    elif(db=="no_keywords"):
+        db=CloudantDB('tweets_no_keywords')
+    else:
+        print("db parameter must in [covid,vaccine,no_keywords]")
+        return {}
+    ddoc = DesignDocument(db.curDB,'_design/ddoc001')
+    ddoc.fetch()
+    if(viewType=="month"):
+        view = View(ddoc, 'view_month')
+    elif(viewType=="zone"):
+        view = View(ddoc,"view_zone")
+    else:
+        view = View(ddoc, 'view_time')
+    result = {}
+    for row in view(limit=100,reduce=True,group=True,startkey=startkey)['rows']:
+        if(mode=="mean"):
+            result[row['key']] = round(row['value']['sum']/row['value']['count'],6)
+        elif(mode=="count"):
+            result[row['key']] = row['value']['count']
+    return result
+
+def get_data(n=100,db="covid",viewType="day",startkey="2021-05-01"):
+    if(db=="covid"):
+        db = CloudantDB('tweets_covid')
+    elif(db=="vaccine"):
+        db= CloudantDB("tweets_vaccine")
+    elif(db=="no_keywords"):
+        db=CloudantDB('tweets_no_keywords')
+    else:
+        print("db parameter must in [covid,vaccine,no_keywords]")
+        return []
+    ddoc = DesignDocument(db.curDB,'_design/ddoc001')
+    ddoc.fetch()
+    if(viewType=="zone"):
+        view = View(ddoc,"view_zone")
+    elif(viewType=="day"):
+        view = View(ddoc, 'view_time')
+    else:
+        return "Does not support viewType"+viewType
+    result = []
+    for row in view(limit=n,reduce=False,group=False,startkey=startkey,include_docs=True)['rows']:
+        result.append(row)
+    return result
