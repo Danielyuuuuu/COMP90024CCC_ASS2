@@ -11,6 +11,19 @@
   shell: docker pull comp90024ass2/test-docker-compose
   ignore_errors: yes
 
+- name: Create an env file
+  shell: |
+    sudo touch /home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env
+
+- name: Add another proxy to the instance
+  become: yes
+  copy:
+    dest: /home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env
+    content: |
+      COUCHDB_ADDRESS="{{ groups['frontend'][0] }}"
+      PXTOKEN="pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA"
+
+
 # - name: Pull dash image from Docker Hub
 #   docker_image:
 #     name: comp90024ass2/test-docker-compose
@@ -24,12 +37,24 @@
 #   ignore_errors: yes
 
 - name: Stop docker container
-  shell: docker stop frontend
+  shell: |
+    docker stop frontend
+    docker container rm frontend
   ignore_errors: yes
 
+# - name: Go to webdocker directory
+#   shell: cd /home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker
+
+# - name: Run dash image
+#   become: yes
+#   docker_container:
+#     name: "frontend"
+#     image: comp90024ass2/test-docker-compose
+#     ports:
+#       - "5000:80"
+#     env_file:
+#       - ./web-variables.env
+
 - name: Run dash image
-  docker_container:
-    name: "frontend"
-    image: comp90024ass2/test-docker-compose
-    ports:
-      - "5000:80"
+  shell: docker run --name frontend --env-file=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env -d -p 5000:80 comp90024ass2/test-docker-compose 
+  ignore_errors: yes

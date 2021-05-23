@@ -353,6 +353,7 @@
   shell: |
     sudo mkdir -p /etc/systemd/system/docker.service.d
     sudo touch /etc/systemd/system/docker.service.d/http-proxy.conf
+
 - name: Add proxy to the instance
   become: yes
   copy:
@@ -364,10 +365,12 @@
       Environment="NO_PROXY=localhost,127.0.0.1,localaddress,172.16.0.0/12,.melbourne.rc.nectar.org.au,.storage.unimelb.edu.au,.cloud.unimelb.edu.au"
       Environment="http_proxy=http://wwwproxy.unimelb.edu.au:8000/"
       Environment="https_proxy=http://wwwproxy.unimelb.edu.au:8000/"
+
 - name: Create another docker proxy file
   shell: |
     sudo mkdir -p /home/ubuntu/.docker
     sudo touch /home/ubuntu/.docker/config.json
+    
 - name: Add another proxy to the instance
   become: yes
   copy:
@@ -384,6 +387,7 @@
           }
         }
       }
+      
 - name: Create the docker group
   become: yes
   shell: sudo groupadd docker
