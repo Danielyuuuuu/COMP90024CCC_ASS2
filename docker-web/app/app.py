@@ -16,6 +16,8 @@ load_dotenv(dotenv_path=env_path, verbose=True)
 ADDRESS = os.getenv("COUCHDB_ADDRESS")
 PX_TOKEN = os.getenv("PXTOKEN")
 
+from .retrieve_data_demo import get_data_summary, get_data 
+
 px.set_mapbox_access_token(PX_TOKEN)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -40,8 +42,11 @@ corrdf = mapdf[["Zone","Overseas Rate", "Average Study Years", "Christian Ratio"
 corr_fig = px.imshow(corrdf,color_continuous_scale="rdbu", range_color=[-1,1], title="Background Inner Correlation")
 corr_fig.update_layout({"height": 600})
 
+
+information = get_data_summary(db="covid",viewType="zone",startkey=0,mode="mean")
 app.layout = html.Div([
     html.Div(ADDRESS),
+    html.Div(information),
     # our graph
     html.Div([
         html.Div([
@@ -68,8 +73,8 @@ app.layout = html.Div([
             html.Div("Twitter Analyse"),
             dcc.RadioItems(
                 id='crossfilter-yaxis-type2',
-                options=[{'label': i, 'value': i} for i in ['Key1', 'Key2']],
-                value='Key1',
+                options=[{'label': i, 'value': i} for i in ['Covid19', 'Vaccination', 'Historical']],
+                value='Historical',
                 labelStyle={'display': 'inline-block'}
             ),
             dcc.Dropdown(
