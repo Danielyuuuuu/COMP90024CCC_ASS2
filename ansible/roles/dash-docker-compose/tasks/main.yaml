@@ -29,7 +29,7 @@
     dest: /home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env
     content: |
       COUCHDB_ADDRESS="{{ groups['frontend'][0] }}"
-      PXTOKEN="pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA"
+      PXTOKEN=pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA
 
 
 # - name: Pull dash image from Docker Hub

@@ -387,7 +387,7 @@
           }
         }
       }
-      
+
 - name: Create the docker group
   become: yes
   shell: sudo groupadd docker
@@ -426,13 +426,6 @@
   pip:
     name: ['tweepy']
     state: latest
-
-# - name: Install json
-#   become: yes
-#   apt:
-#     name: ['json']
-#     state: latest
-#     update_cache: yes
 
 - name: Install shapely
   become: yes
