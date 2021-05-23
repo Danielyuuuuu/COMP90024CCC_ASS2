@@ -4,24 +4,32 @@
     upgrade: yes
     update_cache: yes
 
-# - name: Login Docker Hub
-#   shell: docker login -u a85913658@gmail.com -p comp90024ass2
+- name: Install pexpect
+  pip:
+    name: ['pexpect']
+    state: latest
+
+- name: Login Docker Hub
+  ansible.builtin.expect:
+    command: sudo docker login --username comp90024ass2
+    responses:
+      (?i)password: "9e900f2e-38d9-47fc-af7b-d9209cc6c451"
 
 - name: Pull dash image from Docker Hub
-  shell: docker pull comp90024ass2/test-docker-compose
+  shell: sudo docker pull comp90024ass2/webdocker
   ignore_errors: yes
 
 - name: Create an env file
   shell: |
     sudo touch /home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env
 
-- name: Add another proxy to the instance
+- name: Add env variables for the dash website
   become: yes
   copy:
     dest: /home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env
     content: |
       COUCHDB_ADDRESS="{{ groups['frontend'][0] }}"
-      PXTOKEN="pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA"
+      PXTOKEN=pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA
 
 
 # - name: Pull dash image from Docker Hub
@@ -56,5 +64,5 @@
 #       - ./web-variables.env
 
 - name: Run dash image
-  shell: docker run --name frontend --env-file=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env -d -p 5000:80 comp90024ass2/test-docker-compose 
+  shell: docker run --name frontend --env-file=/home/ubuntu/COMPCOMP90024CCC_ASS2/webdocker/web-variables.env -d -p 5000:80 comp90024ass2/webdocker 
   ignore_errors: yes
