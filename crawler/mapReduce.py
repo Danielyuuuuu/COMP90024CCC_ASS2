@@ -19,6 +19,7 @@ def addViews(db):
         ddoc.add_view("view_zone",'function(doc){emit(doc.zone,parseFloat(doc.sentiment_score))}',"_stats")
         ddoc.add_view("view_time","function(doc){emit(doc.created_at.split(' ')[0], parseFloat(doc.sentiment_score))}","_stats")
         ddoc.add_view("view_month","function(doc){emit(doc.created_at.split(' ')[0].split('-').slice(0,2).join('-'), parseFloat(doc.sentiment_score))}","_stats")
+        ddoc.add_view("view_zone_month","function(doc){emit(doc.created_at.split(' ')[0].split('-').slice(0,2).join('-').concat(' ',doc.zone), parseFloat(doc.sentiment_score))}","_stats")
         ddoc.save()
     except:
         ddoc.fetch()
