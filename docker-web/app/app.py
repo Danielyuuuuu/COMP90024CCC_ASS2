@@ -1,5 +1,6 @@
 from dash.dependencies import Output, Input, State
 # import dash_bootstrap_components as dbc
+import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
@@ -169,11 +170,7 @@ px.set_mapbox_access_token(PX_TOKEN)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-
-
-
 server = Flask(__name__)
-
 
 app = dash.Dash(server=server, external_stylesheets=external_stylesheets)
 app.title = 'Australia & Twitter Analyse'
@@ -193,10 +190,9 @@ corr_fig = px.imshow(corrdf,color_continuous_scale="rdbu", range_color=[-1,1], t
 corr_fig.update_layout({"height": 600})
 
 
-information = get_data_summary(db="covid",viewType="zone",startkey=0,mode="mean")
+# information = get_data_summary(db="covid",viewType="zone",startkey=0,mode="mean")
 app.layout = html.Div([
-    html.Div(ADDRESS),
-    html.Div(information),
+
     # our graph
     html.Div([
         html.Div([
@@ -222,18 +218,17 @@ app.layout = html.Div([
         html.Div([
             html.Div("Twitter Analyse"),
             dcc.RadioItems(
-                id='crossfilter-yaxis-type2',
-                options=[{'label': i, 'value': i} for i in ['Covid19', 'Vaccination', 'Historical']],
-                value='Historical',
+                id='twitter set',
+                options=[{'label': i, 'value': i} for i in ['Covid19', 'Vaccination']],
+                value='Covid19',
                 labelStyle={'display': 'inline-block'}
             ),
             dcc.Dropdown(
-                id='crossfilter-yaxis-column1',
+                id='background analyse',
                 options=[{'label': i, 'value': i} for i in att],
-                value='Life expectancy at birth, total (years)'
+                value='Overseas Rate'
             ),
-
-        ], style={'width': '39%', 'float': 'right', 'display': 'inline-block'})
+        ], style={'width': '42%', 'float': 'right', 'display': 'inline-block'})
     ], style={
         'borderBottom': 'thin lightgrey solid',
         'backgroundColor': 'rgb(250, 250, 250)',
@@ -245,13 +240,97 @@ app.layout = html.Div([
             id='Background Map'
         )
     ], style={'width': '55%',  'display': 'inline-block', 'padding': '0 20'}),
+
+    # html.Div([
+    #     dcc.Graph(
+    #         id='history analyse'
+    #     )
+    # ], style={'width': '43%',  'display': 'inline-block', 'padding': '0 20'}),
+
+    html.Div([
+        dcc.Graph(
+            id='topic'
+            
+        ),
+        dcc.Graph(
+            id='line chart'
+        )
+    ], style={'width': '43%',  'display': 'inline-block', 'padding': '0 20'}),
+
+    html.Div([
+        dcc.Graph(
+            id='Scatter'
+        )
+    ], style={'width': '55%',  'display': 'inline-block', 'padding': '0 20'}),
+
     html.Div([
         dcc.Graph(
             id='background correlation',
             figure=corr_fig
         )
-    ], style={'width': '55%',  'display': 'inline-block', 'padding': '0 20'}),
+    ], style={'width': '43%',  'display': 'inline-block', 'padding': '0 20'}),
+
 ])
+
+@app.callback(
+    dash.dependencies.Output('line chart', 'figure'),
+    [dash.dependencies.Input('Background Map', 'hoverData'),
+     dash.dependencies.Input('twitter set', 'value')])
+def update_linechart(hoverData, dataset):
+    if not hoverData:
+        hoverData ={"points":[{"hovertext":"Sydney"}]}
+    fig = go.Figure()
+    zone_name = hoverData["points"][0]["hovertext"]
+    if dataset == "Covid19":
+        df = convert_dict_df(cov_dict)
+    elif dataset == "Vaccination":
+        df = convert_dict_df(vac_dict)
+
+    tmpdf = df[df["zone"]==zone_name]
+    # print(tmpdf)
+    fig.add_trace(go.Scatter(x=tmpdf["date"], y=tmpdf["senti score"], mode='lines+markers'))
+    fig.update_layout({"title":zone_name+" Sentimental Score", "height":340})
+    return fig
+
+@app.callback(
+    dash.dependencies.Output('topic', 'figure'),
+    [dash.dependencies.Input('Background Map', 'hoverData'),
+     dash.dependencies.Input('twitter set', 'value')])
+def update_linechart(hoverData, dataset):
+    if not hoverData:
+        hoverData ={"points":[{"hovertext":"Sydney"}]}
+    fig = go.Figure()
+    zone_name = hoverData["points"][0]["hovertext"]
+
+    # if dataset == "Covid19":
+    #     df = convert_dict_df(cov_dict)
+    # elif dataset == "Vaccination":
+    #     df = convert_dict_df(vac_dict)
+
+    df = convert_count(wordfreq)
+    tmpdf = df[df["zone"]==zone_name]
+
+    fig = px.bar(tmpdf, y='count', x='word')
+    # fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', height=340)
+
+    return fig
+
+
+
+# @app.callback(
+#     dash.dependencies.Output('history analyse', 'figure'),
+#     dash.dependencies.Input('background analyse', 'value'))
+# def updata_background_analyse(color, size):
+#     map_center = {}
+#     map_center["lon"] = 135
+#     map_center["lat"] = -32
+#     map_fig = px.scatter_mapbox(
+#         mapdf, lat="lat", lon="lon",hover_name="Zone", color=color, size=size, color_continuous_scale="redor",
+#         zoom=3.3, center=map_center, title="Backgroud Map"
+#         )
+#     map_fig.update_layout({"height": 300})
+#     return map_fig
 
 @app.callback(
     dash.dependencies.Output('Background Map', 'figure'),
@@ -268,18 +347,140 @@ def updata_map(color, size):
     map_fig.update_layout({"height": 700})
     return map_fig
 
+@app.callback(
+    dash.dependencies.Output('Scatter', 'figure'),
+    [dash.dependencies.Input('Map Color', 'value'),
+     dash.dependencies.Input('Map Size', 'value')])
+def updata_map(color, size):
+    # df = convert_sen_df(sen_withoutzone)
+    # tmpdf = pd.merge(df,infodf,how='inner',on='zone')
+
+    fig = px.scatter(mapdf, x=size, y=color,title="History Scatter with Sentiment")
+    fig.update_layout({"height": 700})
+    return fig
 
 
+cov_dict = {'2020-10 Canberra': 0.428967,
+ '2020-10 Melbourne': 0.633748,
+ '2020-10 Sydney': 0.585607,
+ '2020-11 Adelaide': 0.720719,
+ '2020-11 Ballarat': 0.959367,
+ '2020-11 Brisbane': 0.090615,
+ '2020-11 Melbourne': 0.62116,
+ '2020-11 Newcastle': 0.873696,
+ '2020-11 Perth': 0.916552,
+ '2020-11 Sydney': 0.472093,
+ '2020-12 Adelaide': 0.5908,
+ '2020-12 Canberra': 0.7206,
+ '2020-12 Melbourne': 0.804355,
+ '2020-12 Newcastle': 0.797671,
+ '2020-12 Perth': 0.770182,
+ '2020-12 Sydney': 0.646368,
+ '2021-01 Adelaide': 0.881215,
+ '2021-01 Brisbane': 0.572534,
+ '2021-01 Geelong': 0.956574,
+ '2021-01 Melbourne': 0.655604,
+ '2021-01 Newcastle': 0.870344,
+ '2021-01 Perth': 0.693467,
+ '2021-01 Sydney': 0.522584,
+ '2021-02 Adelaide': 0.560757,
+ '2021-02 Ballarat': 0.507445,
+ '2021-02 Brisbane': 0.380608,
+ '2021-02 Bunbury': 0.638711,
+ '2021-02 Melbourne': 0.61499,
+ '2021-02 Newcastle': 0.850101,
+ '2021-02 Perth': 0.576656,
+ '2021-02 Sydney': 0.532095,
+ '2021-03 Adelaide': 0.738264,
+ '2021-03 Brisbane': 0.55058,
+ '2021-03 Canberra': 0.209001,
+ '2021-03 Geelong': 0.481629,
+ '2021-03 Hobart': 0.719436,
+ '2021-03 Melbourne': 0.620685,
+ '2021-03 Newcastle': 0.716539,
+ '2021-03 Perth': 0.837277,
+ '2021-03 Sydney': 0.703736,
+ '2021-04 Adelaide': 0.405339,
+ '2021-04 Ballarat': 0.97662,
+ '2021-04 Brisbane': 0.678456,
+ '2021-04 Bunbury': 0.737654,
+ '2021-04 Canberra': 0.345909,
+ '2021-04 Geelong': 0.642872,
+ '2021-04 Hobart': 0.301131,
+ '2021-04 Melbourne': 0.533369,
+ '2021-04 Newcastle': 0.921058,
+ '2021-04 Perth': 0.456338,
+ '2021-04 Sydney': 0.473733,
+ '2021-05 Adelaide': 0.575753,
+ '2021-05 Brisbane': 0.542839,
+ '2021-05 Canberra': 0.617221,
+ '2021-05 Geelong': 0.499726,
+ '2021-05 Hobart': 0.76256,
+ '2021-05 Melbourne': 0.536976,
+ '2021-05 Newcastle': 0.439819,
+ '2021-05 Perth': 0.613703,
+ '2021-05 Sydney': 0.526603}
 
+vac_dict = {'2020-12 Brisbane': 0.567506,
+ '2020-12 Melbourne': 0.319839,
+ '2021-01 Melbourne': 0.973089,
+ '2021-01 Perth': 0.469999,
+ '2021-01 Sydney': 0.905628,
+ '2021-02 Adelaide': 0.899132,
+ '2021-02 Melbourne': 0.582535,
+ '2021-02 Sydney': 0.62045,
+ '2021-03 Adelaide': 0.566033,
+ '2021-03 Canberra': 0.101422,
+ '2021-03 Hobart': 0.473581,
+ '2021-03 Melbourne': 0.60924,
+ '2021-03 Perth': 0.705826,
+ '2021-03 Sydney': 0.51967,
+ '2021-04 Adelaide': 0.541486,
+ '2021-04 Brisbane': 0.567416,
+ '2021-04 Canberra': 0.646087,
+ '2021-04 Geelong': 0.285157,
+ '2021-04 Melbourne': 0.491468,
+ '2021-04 Perth': 0.617063,
+ '2021-04 Sydney': 0.597414,
+ '2021-05 Adelaide': 0.492799,
+ '2021-05 Brisbane': 0.54124,
+ '2021-05 Canberra': 0.559761,
+ '2021-05 Geelong': 0.620549,
+ '2021-05 Hobart': 0.308682,
+ '2021-05 Melbourne': 0.523552,
+ '2021-05 Newcastle': 0.665563,
+ '2021-05 Perth': 0.512675,
+ '2021-05 Sydney': 0.525757}
 
+wordfreq = {"Geelong": {"Avalon": 142, "Timeline": 115, "Yangs": 88, "today": 82, "would": 80, "Victoria": 80, "follow": 65, "Australia": 63, "Werribee": 59, "think": 54, "Melbourne": 54}, "Melbourne": {"Melbourne": 54672, "today": 44645, "Humidity": 37364, "Barometer": 37325, "Temperature": 35466, "slowly": 23294, "Victoria": 21261, "#Melbourne": 21058, "Falling": 16886, "Rising": 16864, "Australia": 16330}, "Perth": {"Perth": 46422, "Australia": 29833, "Western": 22620, "today": 12782, "#perth": 9368, "#Perth": 8962, "photo": 7031, "night": 6561, "posted": 6496, "great": 6041, "Fremantle": 6004}, "Brisbane": {"Brisbane": 71337, "Queensland": 27375, "Australia": 23794, "station": 23525, "METAR": 18177, "There": 17952, "0/000": 17182, "#Brisbane": 16456, "#brisbane": 14022, "today": 12095, "photo": 10200}, "Sydney": {"Sydney": 172956, "Hotel": 94465, "#nowplaying": 86101, "Parramatta": 74094, "Australia": 72755, "Collector": 70019, "#Sydney": 55986, "Download": 55791, "#sydney": 39656, "today": 36782, "Beach": 31532}, "Hobart": {"Hobart": 4639, "Tasmania": 3778, "#tasmania": 1389, "photo": 1161, "#hobart": 1148, "posted": 1126, "Australia": 847, "today": 637, "Wellington": 615, "Museum": 498, "@Altiusrt": 466}, "Canberra": {"Canberra": 22035, "carrier": 17839, "Frequency": 17833, "strength": 17816, "Signal": 17739, "receiving": 17378, "#Canberra": 8215, "Australian": 7930, "TURBO": 7909, "Capital": 5942, "#canberra": 5049}, "Newcastle": {}, "Adelaide": {"Adelaide": 41981, "Australia": 20720, "South": 18595, "#Adelaide": 9401, "#adelaide": 7184, "today": 6708, "photo": 6417, "posted": 5778, "night": 5608, "morning": 5232, "Drinking": 5189}, "Bunbury": {}, "Ballarat": {}}
+sen_withoutzone = {"Brisbane": 0.5817642194444445, "Sydney": 0.6022361873333333, "Melbourne": 0.55994314655, "Adelaide": 0.6546574548571428, "Hobart": 0.67630666, "Perth": 0.5138315539999999, "Ballarat": 0.9766196, "Newcastle": 0.64645645275, "Canberra": 0.329503115}
+def convert_sen_df(sen_dict):
+    sen_list = []
+    for i in sen_dict:
+        sen_list.append([i, sen_dict[i]])
+    sen_df = pd.DataFrame(sen_list)
+    sen_df.columns = ["zone", "senti score"]
+    return sen_df
 
+def convert_count(wordfreq):
+    lst = []
+    for i in wordfreq:
+        area_count = wordfreq[i]
+        for j in area_count:
+            lst.append([i, j, area_count[j]])
+    df = pd.DataFrame(lst)
+    df.columns = ["zone", "word", "count"]
+    return df
 
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May 19 00:40:53 2021
+def convert_dict_df(sen_dict):
+    sen_list = []
+    for i in sen_dict:
+        date, zone = i.split(" ")
+        sen_list.append([date, zone, sen_dict[i]])
 
-@author: Windwalker
-"""
+    sen_df = pd.DataFrame(sen_list)
+    sen_df.columns = ["date", "zone", "senti score"]
+    return sen_df
 
 if __name__ == '__main__':
     app.run_server(debug=True)
