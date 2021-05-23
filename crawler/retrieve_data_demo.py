@@ -24,6 +24,8 @@ def get_data_summary(db="covid",viewType="month",startkey="2020-10",mode = "mean
         view = View(ddoc, 'view_month')
     elif(viewType=="zone"):
         view = View(ddoc,"view_zone")
+    elif(viewType=="zone month"):
+        view=View(ddoc, 'view_zone_month')
     else:
         view = View(ddoc, 'view_time')
     result = {}
@@ -56,6 +58,10 @@ def get_data(n=100,db="covid",viewType="day",startkey="2021-05-01"):
     for row in view(limit=n,reduce=False,group=False,startkey=startkey,include_docs=True)['rows']:
         result.append(row)
     return result
+
+print("Covid mean sentiment score (by month_zone)")
+print(get_data_summary(db="covid",viewType="zone month",startkey="2020-11 Adelaide",mode="mean"))
+print()
 
 print("Covid mean sentiment score (by zone)")
 print(get_data_summary(db="covid",viewType="zone",startkey=0,mode="mean"))
