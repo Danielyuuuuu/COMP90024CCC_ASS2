@@ -5,23 +5,23 @@ import sys
 from database_cloudant import CloudantDB
 from sentiment_analysis import sentiment_analyzer
 #import geopandas
-from crawler_keywords import words_arr
+from crawler_keywords import words
 from zoneFeatures import zone_info, getBoundingbox
 from TwitterProcessor import filtKeywords, filtLocations, parseTweet
 import time
 
+# Yanze' Key
+consumer_key="7jWNg1jENq2hvmAzqZeKvfcF4"
+consumer_secret="l9C5m1JCbdYTOTbLYWC3W8AkEE7BC3ofHkLDgos37clTxDJUyc"
+access_token="1366203266162253825-CvOHBqKvMEqbN9iOpr975BOg6OttrO"
+access_token_secret="7lRZSvtwo2bh8uuM3J2wJbb3rFSSBYy7zfR1u8H30Fb27"
+"""
 consumer_key = "Ozup2OAf8pHZhha38AELtzswf"
 consumer_secret = "T0QCvEWdUm2PakSKDsho9usdvaPWZsUB0hhB2XE1JwgwCGp7wV"
 access_token = "1252083222189498368-BZUECSVoWd6IDSWGnETwH4krVS3AHh"
 access_token_secret = "y9UNO50rhFndcMPy4S4cY5qLEcZdz6NygWyl8t0ZY7H8s"
 """
-zones = geopandas.read_file('./geo_data/target_zones.geojson')
-zone_code = zones.loc[0,:].zone
-zone_location=zones.loc[0,:].geometry.bounds
 
-GEOBOX_MELBOURNE = [144.877548, -37.851203, 145.031356, -37.729655]  # https://boundingbox.klokantech.com/
-GEOBOX_AUS = [106.8, -41.9, 154.9, -11.5]
-"""
 USERNAME='admin'
 PASSWORD = 'password'
 URL = 'http://172.26.131.97:5984'
@@ -37,7 +37,8 @@ def main():
         password = PASSWORD
         url=URL
     # connect database
-    db = CloudantDB("tweets_keywords",username,password,url)
+    db_vac = CloudantDB("tweets_vaccine",username,password,url)
+    db_covid = CloudantDB("tweets_covid",username,password,url)
     db_all = CloudantDB("tweets_no_keywords",username,password,url)
     db_raw = CloudantDB("tweets_raw",username,password,url)
     sa = sentiment_analyzer.SentimentAnalyzer()
@@ -66,14 +67,23 @@ def main():
                     continue
                 db_raw.add_record(tweet._json)
                 db_all.add_record(parseTweet(tweet,sa,zone,["no keywords"]))
-                words = filtKeywords(tweet,self.keywords)
-                if(words is None):
+                vac_words = filtKeywords(tweet,self.keywords['vaccine'])
+                if(vac_words is not None):
+                    record = parseTweet(tweet,sa,zone,vac_words)
+                    data.append(record)
+                    print("---new tweet found----- keywords:",vac_words,"zone",zone)
+                    db_vac.add_record(record)
+                    print("saved to database")
                     continue
-                record = parseTweet(tweet,sa,zone,words)
-                data.append(record)
-                print("---new tweet found----- keywords:",words,"zone",zone)
-                db.add_record(record)
-                print("saved to database")
+                cov_words = filtKeywords(tweet,self.keywords['covid'])
+                if(cov_words is not None):
+                    record = parseTweet(tweet,sa,zone,cov_words)
+                    data.append(record)
+                    print("---new tweet found----- keywords:",cov_words,"zone",zone)
+                    db_covid.add_record(record)
+                    print("saved to database")
+                
+                
                 
     
     class MyStreamListener(tweepy.StreamListener):
@@ -88,13 +98,21 @@ def main():
                 if(zone is not None):
                     db_raw.add_record(status._json)
                     db_all.add_record(parseTweet(status,sa,zone,["no keywords"]))
-                words = filtKeywords(status,self.keywords)
-                if(words is not None and zone is not None):
-                    record = parseTweet(status,sa,zone,words)
+                vac_words = filtKeywords(status,self.keywords['vaccine'])
+                if(vac_words is not None and zone is not None):
+                    record = parseTweet(status,sa,zone,vac_words)
                     data.append(record)
-                    print("---new tweet found----- keywords:",words,"zone",zone)
-                    db.add_record(record)
+                    print("---new tweet found----- keywords:",vac_words,"zone",zone)
+                    db_vac.add_record(record)
                     print("saved to database")
+                cov_words = filtKeywords(status,self.keywords['covid'])
+                if(cov_words is not None and zone is not None):
+                    record = parseTweet(status,sa,zone,cov_words)
+                    data.append(record)
+                    print("---new tweet found----- keywords:",cov_words,"zone",zone)
+                    db_covid.add_record(record)
+                    print("saved to database")
+                
                 try:
                     self.userListener.searchUser(status.user.id)
                 except Exception as e:
@@ -125,8 +143,8 @@ def main():
     box= getBoundingbox(zone_info["features"])
     box_1d = [j for sub in box.values() for j in sub]
     
-    myUserListener = UserTimelineListener(api,words_arr,box.keys())
-    myStreamListener = MyStreamListener(words_arr,box.keys(),myUserListener)
+    myUserListener = UserTimelineListener(api,words,box.keys())
+    myStreamListener = MyStreamListener(words,box.keys(),myUserListener)
     while True:
         try:
             myStream = tweepy.Stream(auth, listener=myStreamListener)
