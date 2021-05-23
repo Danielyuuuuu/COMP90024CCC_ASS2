@@ -1,0 +1,17 @@
+version: '3.7'
+services:
+
+  dashboard:
+    build: 
+      context: ./
+    container_name: ${COMPOSE_PROJECT_NAME}
+    hostname: ${COMPOSE_PROJECT_NAME}
+    env_file:
+      - crawler.env
+    restart: always
+    networks:
+      - network 
+      
+networks:
+  network:
+    driver: bridge
