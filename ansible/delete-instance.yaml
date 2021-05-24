@@ -9,5 +9,5 @@
   roles:
     - role: openstack-common
     - role: delete-instance
-    # - role: delete-security-group
+    - role: delete-security-group
     - role: delete-volume

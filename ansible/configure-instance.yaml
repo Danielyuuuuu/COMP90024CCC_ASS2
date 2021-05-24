@@ -14,4 +14,4 @@
   roles:
     - role: add-proxy
     - role: configure-dependencies
-    # - role: temp-role
+    - role: clone-github
