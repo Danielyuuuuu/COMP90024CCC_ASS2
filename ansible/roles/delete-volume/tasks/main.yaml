@@ -1,5 +1,5 @@
 # Create volumes from vars
-- name: Create volume(s) on NeCTAR
+- name: Delete volume(s) on NeCTAR
   os_volume:
     display_name: '{{ item.vol_name }}'
     size: '{{ item.vol_size }}'

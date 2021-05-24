@@ -1,10 +1,6 @@
 # Volume
 volumes:
-  - vol_name: vol-1
-    vol_size: 100
-  - vol_name: vol-2
-    vol_size: 100
-  - vol_name: vol-3
+  - vol_name: vol-4
     vol_size: 100
 
 # Security group
@@ -48,9 +44,5 @@ security_groups:
 
 # Instance
 instances:
-  - name: testInstance-1
-    volumes: 'vol-1'
-  - name: testInstance-2
-    volumes: 'vol-2'
-  - name: testInstance-3
-    volumes: 'vol-3'
+  - name: testInstance-4
+    volumes: 'vol-4'
