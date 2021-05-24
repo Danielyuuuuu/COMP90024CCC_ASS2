@@ -1,97 +1,45 @@
 ---
-- name: add github ssh key
-  copy:
-    src: "config/github-key.pem"
-    dest: /home/ubuntu/.ssh/github-key
-    owner: ubuntu
-    group: ubuntu
-    mode: 0600
+- name: Update and upgrade apt packages
+  become: true
+  apt:
+    upgrade: yes
+    update_cache: yes
 
-- name: add github ssh key to a folder
-  become: yes
-  copy:
-    src: "config/github-key.pem"
-    dest: /home/ubuntu/
-    owner: ubuntu
-    group: ubuntu
-    mode: 0600
+# - name: add github ssh key
+#   copy:
+#     src: "config/github-key.pem"
+#     dest: /home/ubuntu/.ssh/github-key
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: 0600
 
-- name: configure ssh to use ansible key for github.com
-  template:
-    src: "config/ssh-config"
-    dest: /home/ubuntu/.ssh/config
-    owner: ubuntu
-    group: ubuntu
-    mode: 0644
-
-# - name: Clone a private repository into /opt.
+# - name: add github ssh key to a folder
 #   become: yes
-#   git:
-#     repo: git@github.com:rexding97/COMP90024CCC_ASS2.git
-#     version: master
-#     dest: /opt/github-repo
+#   copy:
+#     src: "config/github-key.pem"
+#     dest: /home/ubuntu/
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: 0600
 
-
-# - name: Creating a git directory
-#   become: yes
-#   file:
-#     path: '{{ git_repo }}'
-#     state: directory
-  # shell: |
-  #   sudo mkdir '{{ git_repo }}'
-
-# - name: git pull
-#   shell: git pull # --config core.sshCommand="ssh -i /home/ubuntu/.ssh/GitHubKey"
-#   args:
-#     chdir: '{{ git_repo }}'
-
-# - name: Clone the github repository
-#   become: yes
-#   git:
-#     repo: git@github.com:rexding97/COMP90024CCC_ASS2.git
-#     dest: '{{ git_repo }}'
-#     accept_hostkey: yes
-#     key_file: /home/ubuntu/.ssh/github-key
-
-# - name: Clone git
-#   become: yes
-#   shell:
-#     git clone ssh://git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
-
-
-# - name: clone from github
-#   shell: |
-#     git clone ssh://git@github.com:kelseyhightower/helloworld.git
+# - name: configure ssh to use ansible key for github.com
+#   template:
+#     src: "config/ssh-config"
+#     dest: /home/ubuntu/.ssh/config
+#     owner: ubuntu
+#     group: ubuntu
+#     mode: 0644
 
 - name: Delete content & directory
   file:
     state: absent
     path: '{{ git_repo }}'
 
-# - name: clone from github
-#   shell: |
-#     sudo git -c core.sshCommand="ssh -i ./home/ubuntu/" clone git@github.com:rexding97/COMP90024CCC_ASS2.git ./home/ubuntu/git-repo
-
-# - name: clone repo
-#   become: yes
+# - name: Get updated files from git repository 
 #   git: 
-#     repo=git@github.com:rexding97/COMP90024CCC_ASS2.git
-#     dest=/home/ubuntu/COMP90024-Twitter-Project/
-#     clone=yes
-#     accept_hostkey=yes
-#     key_file=/home/ubuntu/github-key.pem
+#     repo: "https://{{github_user_name}}:{{github_user_password}}@github.com/rexding97/COMP90024CCC_ASS2.git"
+#     dest: /home/ubuntu/COMPCOMP90024CCC_ASS2
+#   # async: 60
 
-# - name: Clone git
-#   become: yes
-#   shell: git clone git@github.com:rexding97/COMP90024CCC_ASS2.git --config core.sshCommand="ssh -i /home/ubuntu/github-key.pem"
-
-
-# - name: Delete content & directory
-#   file:
-#     state: absent
-#     path: /home/ubuntu/COMP90024CCC_ASS2/
-
-- name: Get updated files from git repository 
-  git: 
-    repo: "https://{{github_user_name}}:{{github_user_password}}@github.com/rexding97/COMP90024CCC_ASS2.git"
-    dest: /home/ubuntu/COMPCOMP90024CCC_ASS2
+- name: Get updated files from git repository   
+  shell: git clone https://mrc-user:unimelb2021@github.com/rexding97/COMP90024CCC_ASS2.git /home/ubuntu/COMPCOMP90024CCC_ASS2

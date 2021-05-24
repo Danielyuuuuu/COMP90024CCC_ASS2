@@ -20,3 +20,5 @@ couchdb_name: my-couchdb
 cluster_name: 'couchdb_cluster'
 
 web_token: 'pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA'
+
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
