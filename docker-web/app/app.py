@@ -11,14 +11,18 @@ from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 import os
 
+env_path = Path('./web-variables.env')
+load_dotenv(dotenv_path=env_path, verbose=True)
 
+ADDRESS = os.getenv("COUCHDB_ADDRESS")
+PX_TOKEN = os.getenv("PXTOKEN")
 ##############################################
 from cloudant.design_document import DesignDocument
 
 
 USERNAME='admin'
 PASSWORD = 'password'
-URL = 'http://172.26.131.218:5984/'
+URL = 'http://' + ADDRESS + ':5984/'
 from cloudant.client import CouchDB
 from cloudant.design_document import DesignDocument
 from cloudant.view import View
@@ -146,11 +150,7 @@ def get_data(n=100,db="covid",viewType="day",startkey="2021-05-01"):
 ##############################################
 
 
-env_path = Path('./web-variables.env')
-load_dotenv(dotenv_path=env_path, verbose=True)
 
-ADDRESS = os.getenv("COUCHDB_ADDRESS")
-PX_TOKEN = os.getenv("PXTOKEN")
 
 
 px.set_mapbox_access_token(PX_TOKEN)
@@ -190,7 +190,7 @@ app.layout = html.Div([
                 value='Overseas Rate'
             ),
         ],
-        style={'width': '25%', 'display': 'inline-block','padding': '10px 5px'}),
+        style={'width': '25%', 'display': 'inline-block','padding': '20px 5px'}),
 
         html.Div([
             html.Div("Map Bubble Size:"),
@@ -200,8 +200,10 @@ app.layout = html.Div([
                 value='Overseas Rate'
             ),
         ],
-        style={'width': '25%', 'display': 'inline-block','padding': '10px 5px'}),
+        style={'width': '25%', 'display': 'inline-block','padding': '20px 5px'}),
 
+        html.Div([html.H2("City Analytics")], style={'display': 'inline-block','margin-left' : '100px', 'margin-bottom': '10px'}),
+        
         # html.Div([
         #     html.Div("Twitter Analyse"),
         #     dcc.RadioItems(
@@ -274,7 +276,7 @@ def updata_word_total_chart(hoverData):
     zone_name = hoverData["points"][0]["hovertext"]
     tmpdf = get_monthly_topwords()
     fig = px.bar(tmpdf[tmpdf["zone"]==zone_name], x='word', y='count', animation_frame="month", title="Monthly Top Words in "+zone_name)
-    fig.update_layout({"title":zone_name+" Sentimental Score", "height":340})
+    fig.update_layout({"height":450})
     return fig
 
 @app.callback(
@@ -320,7 +322,7 @@ def update_linechart(hoverData):
 
     fig = px.bar(tmpdf, y='count', x='word')
     # fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
-    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', height=340)
+    fig.update_layout(uniformtext_minsize=8, title="Top Word History", uniformtext_mode='hide', height=250)
 
     return fig
 
