@@ -24,7 +24,7 @@ access_token_secret = "y9UNO50rhFndcMPy4S4cY5qLEcZdz6NygWyl8t0ZY7H8s"
 
 USERNAME='admin'
 PASSWORD = 'password'
-URL = 'http://172.26.131.97:5984'
+URL = 'http://172.26.131.218:5984'
 def main():
     
     args = sys.argv[1:]

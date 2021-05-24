@@ -6,7 +6,7 @@ Created on Wed May 19 00:40:53 2021
 """
 USERNAME='admin'
 PASSWORD = 'password'
-URL = 'http://172.26.131.97:5984'
+URL = 'http://172.26.131.218:5984'
 from cloudant.client import CouchDB
 from cloudant.design_document import DesignDocument
 from cloudant.view import View
@@ -41,6 +41,9 @@ class CloudantDB():
                 self.curDB.create_document(record)
             else:
                 print("already exist")
+        elif('_id' in json_record.keys()):
+            if(json_record['_id'] not in self.curDB):
+                self.curDB.create_document(json_record)
     
     def delete_record(self,recordID):
         if(recordID in self.curDB):
