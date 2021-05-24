@@ -3,7 +3,7 @@ import random
 def main():
   num_for_crawler = int(input ("Number of hosts for crawler: "))
   num_for_frontend = int(input ("Number of hosts for frontend: "))
-  num_for_backend = int(input ("Number of hosts for backend: "))
+  num_for_dataAnalysis = int(input ("Number of hosts for data analysis: "))
 
   hosts = []
   f = open("hosts_backup_file.ini", "r")
@@ -20,7 +20,7 @@ def main():
   if (num_for_frontend > len(hosts)):
     print("Exception: Do not have enough hosts to run {} frontend".format(num_for_frontend))
     exit()
-  if (num_for_backend > len(hosts)):
+  if (num_for_dataAnalysis > len(hosts)):
     print("Exception: Do not have enough hosts to run {} backend".format(num_for_backend))
     exit()
 
@@ -49,23 +49,23 @@ def main():
     f.write(hosts[::-1][i] + "\n")
     assigned_hosts.append(hosts[::-1][i])
 
-  f.write("\n[backend]\n") 
-  hosts_for_backend = []
+  f.write("\n[dataAnalysis]\n") 
+  hosts_for_dataAnalysis = []
 
   if len(hosts) > len(assigned_hosts):
     for host in hosts:
-      if num_for_backend > len(hosts_for_backend):
-        if host not in assigned_hosts and host not in hosts_for_backend:
-          hosts_for_backend.append(host)
+      if num_for_dataAnalysis > len(hosts_for_dataAnalysis):
+        if host not in assigned_hosts and host not in hosts_for_dataAnalysis:
+          hosts_for_dataAnalysis.append(host)
       else:
         break
 
-  while num_for_backend > len(hosts_for_backend):
+  while num_for_dataAnalysis > len(hosts_for_dataAnalysis):
     host = random.choice(hosts)
-    if host not in hosts_for_backend:
-      hosts_for_backend.append(host)
+    if host not in hosts_for_dataAnalysis:
+      hosts_for_dataAnalysis.append(host)
 
-  for host in hosts_for_backend:
+  for host in hosts_for_dataAnalysis:
     f.write(host + "\n")
     if host not in assigned_hosts:
       assigned_hosts.append(host)
