@@ -52,6 +52,8 @@ def get_data(n=100,db="covid",viewType="day",startkey="2021-05-01"):
         view = View(ddoc,"view_zone")
     elif(viewType=="day"):
         view = View(ddoc, 'view_time')
+    elif(viewType=="month"):
+        view = View(ddoc, 'view_month')
     else:
         return "Does not support viewType"+viewType
     result = []
