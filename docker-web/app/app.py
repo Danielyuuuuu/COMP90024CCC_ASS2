@@ -12,24 +12,27 @@ from pathlib import Path
 import os
 
 
-####################################################
+##############################################
+from cloudant.design_document import DesignDocument
+
+
 USERNAME='admin'
 PASSWORD = 'password'
-URL = 'http://172.26.131.97:5984'
+URL = 'http://172.26.131.218:5984/'
 from cloudant.client import CouchDB
 from cloudant.design_document import DesignDocument
 from cloudant.view import View
 
 class CloudantDB():
-    def __init__(self,db_name,username = USERNAME,password=PASSWORD,url = URL):
-        self.client = CouchDB(username, password, url=url, connect=True)
+    def __init__(self,db_name,username = USERNAME,password=PASSWORD,url = URL,partition=True):
+        self.client = CouchDB(USERNAME, PASSWORD, url=URL, connect=True)
         self.session = self.client.session()
         self.curDB = None
         print('Username: {0}'.format(self.session['userCtx']['name']))
         print('Databases: {0}'.format(self.client.all_dbs()))
-        self.accessDB(db_name)
+        self.accessDB(db_name,partition=True)
     
-    def accessDB(self,db_name):
+    def accessDB(self,db_name,partition=True):
         if(db_name in self.client.all_dbs()):
             self.curDB = self.client[db_name]
         else:
@@ -38,33 +41,18 @@ class CloudantDB():
         if self.curDB.exists():
             print('Accessing db:',db_name)
     
-    def add_record(self, json_record, db_name=None):
-        hash_string = str(hash(json_record['id']))
-        if(hash_string not in self.curDB):
-            json_record['_id'] = hash_string
-            record = json_record
-            my_document = self.curDB.create_document(record)
-            #if my_document.exists():
-                #print('Adding record...SUCCESS!!')
-        else:
-            print("already exist")
-    
-    def update_record(self, recordID, data):
-        if(recordID in self.curDB):
-            doc = self.curDB(recordID)
-            for k,v in data.items():
-                doc[k]=v
-            doc.save()
-            return
-        hash_string = str(hash(recordID))
-        if(hash_string in self.curDB):
-            doc = self.curDB(hash_string)
-            for k,v in data.items():
-                doc[k]=v
-            doc.save()
-            return
-        else:
-            print("record not found")
+    def add_record(self, json_record, db_name=None, key=None):
+        if(key is not None and key not in self.curDB):
+            json_record['_id'] = key
+            self.curDB.create_document(json_record)
+        elif('id' in json_record.keys()):
+            hash_string = str(hash(json_record['id']))
+            if(hash_string not in self.curDB):
+                json_record['_id'] = hash_string
+                record = json_record
+                self.curDB.create_document(record)
+            else:
+                print("already exist")
     
     def delete_record(self,recordID):
         if(recordID in self.curDB):
@@ -94,9 +82,6 @@ class CloudantDB():
                 break
         return data
     
-    def get_num_records(self):
-        return len(self.curDB)
-    
     def close(self):
         self.client.disconnect()
         
@@ -104,6 +89,7 @@ class CloudantDB():
         all_dbs = self.client.all_dbs()
         print('Databases: {0}'.format(all_dbs))
         return all_dbs
+
 
 def get_data_summary(db="covid",viewType="month",startkey="2020-10",mode = "mean"):
     if(db=="covid"):
@@ -149,13 +135,14 @@ def get_data(n=100,db="covid",viewType="day",startkey="2021-05-01"):
         view = View(ddoc,"view_zone")
     elif(viewType=="day"):
         view = View(ddoc, 'view_time')
+    elif(viewType=="month"):
+        view = View(ddoc, 'view_month')
     else:
         return "Does not support viewType"+viewType
     result = []
     for row in view(limit=n,reduce=False,group=False,startkey=startkey,include_docs=True)['rows']:
         result.append(row)
     return result
-
 ##############################################
 
 
@@ -422,97 +409,9 @@ def convert_monthly_topword(monthly_topword):
     return
 
 
-cov_dict = {'2020-10 Canberra': 0.428967,
- '2020-10 Melbourne': 0.633748,
- '2020-10 Sydney': 0.585607,
- '2020-11 Adelaide': 0.720719,
- '2020-11 Ballarat': 0.959367,
- '2020-11 Brisbane': 0.090615,
- '2020-11 Melbourne': 0.62116,
- '2020-11 Newcastle': 0.873696,
- '2020-11 Perth': 0.916552,
- '2020-11 Sydney': 0.472093,
- '2020-12 Adelaide': 0.5908,
- '2020-12 Canberra': 0.7206,
- '2020-12 Melbourne': 0.804355,
- '2020-12 Newcastle': 0.797671,
- '2020-12 Perth': 0.770182,
- '2020-12 Sydney': 0.646368,
- '2021-01 Adelaide': 0.881215,
- '2021-01 Brisbane': 0.572534,
- '2021-01 Geelong': 0.956574,
- '2021-01 Melbourne': 0.655604,
- '2021-01 Newcastle': 0.870344,
- '2021-01 Perth': 0.693467,
- '2021-01 Sydney': 0.522584,
- '2021-02 Adelaide': 0.560757,
- '2021-02 Ballarat': 0.507445,
- '2021-02 Brisbane': 0.380608,
- '2021-02 Bunbury': 0.638711,
- '2021-02 Melbourne': 0.61499,
- '2021-02 Newcastle': 0.850101,
- '2021-02 Perth': 0.576656,
- '2021-02 Sydney': 0.532095,
- '2021-03 Adelaide': 0.738264,
- '2021-03 Brisbane': 0.55058,
- '2021-03 Canberra': 0.209001,
- '2021-03 Geelong': 0.481629,
- '2021-03 Hobart': 0.719436,
- '2021-03 Melbourne': 0.620685,
- '2021-03 Newcastle': 0.716539,
- '2021-03 Perth': 0.837277,
- '2021-03 Sydney': 0.703736,
- '2021-04 Adelaide': 0.405339,
- '2021-04 Ballarat': 0.97662,
- '2021-04 Brisbane': 0.678456,
- '2021-04 Bunbury': 0.737654,
- '2021-04 Canberra': 0.345909,
- '2021-04 Geelong': 0.642872,
- '2021-04 Hobart': 0.301131,
- '2021-04 Melbourne': 0.533369,
- '2021-04 Newcastle': 0.921058,
- '2021-04 Perth': 0.456338,
- '2021-04 Sydney': 0.473733,
- '2021-05 Adelaide': 0.575753,
- '2021-05 Brisbane': 0.542839,
- '2021-05 Canberra': 0.617221,
- '2021-05 Geelong': 0.499726,
- '2021-05 Hobart': 0.76256,
- '2021-05 Melbourne': 0.536976,
- '2021-05 Newcastle': 0.439819,
- '2021-05 Perth': 0.613703,
- '2021-05 Sydney': 0.526603}
+cov_dict = get_data_summary(db="covid",viewType="zone month")
 
-vac_dict = {'2020-12 Brisbane': 0.567506,
- '2020-12 Melbourne': 0.319839,
- '2021-01 Melbourne': 0.973089,
- '2021-01 Perth': 0.469999,
- '2021-01 Sydney': 0.905628,
- '2021-02 Adelaide': 0.899132,
- '2021-02 Melbourne': 0.582535,
- '2021-02 Sydney': 0.62045,
- '2021-03 Adelaide': 0.566033,
- '2021-03 Canberra': 0.101422,
- '2021-03 Hobart': 0.473581,
- '2021-03 Melbourne': 0.60924,
- '2021-03 Perth': 0.705826,
- '2021-03 Sydney': 0.51967,
- '2021-04 Adelaide': 0.541486,
- '2021-04 Brisbane': 0.567416,
- '2021-04 Canberra': 0.646087,
- '2021-04 Geelong': 0.285157,
- '2021-04 Melbourne': 0.491468,
- '2021-04 Perth': 0.617063,
- '2021-04 Sydney': 0.597414,
- '2021-05 Adelaide': 0.492799,
- '2021-05 Brisbane': 0.54124,
- '2021-05 Canberra': 0.559761,
- '2021-05 Geelong': 0.620549,
- '2021-05 Hobart': 0.308682,
- '2021-05 Melbourne': 0.523552,
- '2021-05 Newcastle': 0.665563,
- '2021-05 Perth': 0.512675,
- '2021-05 Sydney': 0.525757}
+vac_dict = get_data_summary(db="vaccine",viewType="zone month")
 
 wordfreq = {"Adelaide": {"Adelaide": 281, "Australia": 203, "South": 163, "posted": 141, "photo": 134, "today": 125, "people": 82, "great": 80, "Happy": 68, "video": 68}, "Ballarat": {"#walkies": 24, "Ballarat": 23, "Abstract": 16, "#zerowaste": 14, "#recycle": 13, "#MAFS": 12, "#abstractart": 12, "#artist": 11, "#recycling": 11, "#artwork": 11}, "Brisbane": {"posted": 961, "photo": 938, "Brisbane": 489, "Queensland": 476, "Australia": 350, "today": 201, "people": 126, "great": 119, "night": 114, "first": 111}, "Bunbury": {"Bunbury": 7, "Western": 4, "Australia": 4, "posted": 3, "photo": 3, "#housesitting": 2, "walking": 2, "today": 2, "Taking": 1, "break": 1}, "Canberra": {"Canberra": 168, "posted": 101, "photo": 97, "Australian": 71, "Australia": 65, "great": 58, "eWasp": 58, "today": 55, "people": 52, "morning": 50}, "Geelong": {"Geelong": 80, "Extreme": 44, "Board": 37, "Store": 25, "Victoria": 24, "today": 22, "Tours": 17, "photo": 16, "posted": 15, "WARRIORS": 13}, "Hobart": {"Tasmania": 58, "Australia": 43, "Hobart": 39, "Kingston": 33, "photo": 33, "posted": 32, "Beach": 30, "today": 23, "iPhone": 20, "#blackandwhite": 19}, "Melbourne": {"posted": 2452, "photo": 2270, "Victoria": 1343, "Melbourne": 1336, "Australia": 1137, "today": 539, "people": 410, "great": 385, "would": 323, "video": 300}, "Newcastle": {"posted": 251, "photo": 226, "Newcastle": 188, "South": 90, "Wales": 89, "Forum": 76, "University": 69, "Sport": 61, "today": 51, "Australia": 37}, "Perth": {"Perth": 479, "Australia": 474, "posted": 453, "photo": 415, "Western": 414, "today": 153, "people": 129, "@11AberdeenStreet": 124, "\ufe0f0893252011": 116, "great": 109}, "Sydney": {"posted": 3089, "photo": 2893, "Sydney": 2420, "Australia": 2182, "South": 633, "Wales": 588, "today": 582, "people": 368, "great": 364, "video": 348}}
 sen_withoutzone = {'Adelaide': 0.693848,
