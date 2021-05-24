@@ -271,13 +271,9 @@ app.layout = html.Div([
 def updata_word_total_chart(hoverData):
     if not hoverData:
         hoverData ={"points":[{"hovertext":"Sydney"}]}
-    fig = go.Figure()
     zone_name = hoverData["points"][0]["hovertext"]
-    df = convert_dict_df(vac_dict)
-
-    tmpdf = df[df["zone"]==zone_name]
-    # print(tmpdf)
-    fig.add_trace(go.Scatter(x=tmpdf["date"], y=tmpdf["senti score"], mode='lines+markers'))
+    tmpdf = get_monthly_topwords()
+    fig = px.bar(tmpdf[tmpdf["zone"]==zone_name], x='word', y='count', animation_frame="month", title="Monthly Top Words in "+zone_name)
     fig.update_layout({"title":zone_name+" Sentimental Score", "height":340})
     return fig
 
@@ -356,57 +352,16 @@ def updata_map(color, size):
     fig.update_layout({"height": 700})
     return fig
 
-monthly_topword = [
-            {"2020-01":{
-                "Adelaide":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Ballarat":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Brisbane":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Bunbury":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Canberra":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Geelong":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Hobart":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Melbourne":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Newcastle":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Perth":{
-                    "Word1":1,
-                    "Word2":2
-                },
-                "Sydney":{
-                    "Word1":1,
-                    "Word2":2
-                }
-            }},
-        ]
 
 def convert_monthly_topword(monthly_topword):
-    return
+    lst = []
+    for month in monthly_topword:
+        for area in monthly_topword[month]:
+            for word in monthly_topword[month][area]:
+                lst.append([month, area, word, monthly_topword[month][area][word]])
+    
+    return pd.DataFrame(lst)
+
 
 
 cov_dict = get_data_summary(db="covid",viewType="zone month")
@@ -425,6 +380,22 @@ sen_withoutzone = {'Adelaide': 0.693848,
                 'Newcastle': 0.75033,
                 'Perth': 0.700816,
                 'Sydney': 0.723348}
+
+def get_monthly_topwords():
+    db10 = CloudantDB("monthlytopwords")
+    data = db10.get_data()
+    lst = []
+
+    for month_data in data:
+        month = month_data["_id"]
+        for key in month_data:
+            if key != "_id" and key!= "_rev":
+                for word in month_data[key]:
+                    count = month_data[key][word]
+                    lst.append([month, key, word, count])
+    df = pd.DataFrame(lst)
+    df.columns = ["month", "zone", "word", "count"]
+    return df
 
 
 def convert_sen_df(sen_dict):
