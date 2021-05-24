@@ -344,13 +344,14 @@ def updata_map(color, size):
 
 @app.callback(
     dash.dependencies.Output('Scatter', 'figure'),
-    [dash.dependencies.Input('Map Color', 'value'),
-     dash.dependencies.Input('Map Size', 'value')])
-def updata_map(color, size):
-    # df = convert_sen_df(sen_withoutzone)
-    # tmpdf = pd.merge(df,infodf,how='inner',on='zone')
+     dash.dependencies.Input('Map Size', 'value'))
+def updata_map(size):
 
-    fig = px.scatter(mapdf, x=size, y=color,title="History Scatter with Sentiment")
+    sendf = pd.DataFrame(sen_withoutzone.items())
+    sendf.columns = ["zone", "sen score"]
+    pd.merge(sendf,mapdf,how='inner',on='zone')
+
+    fig = px.scatter(mapdf, x=size, y="sen score",title="History Sentiment by "+size)
     fig.update_layout({"height": 700})
     return fig
 
