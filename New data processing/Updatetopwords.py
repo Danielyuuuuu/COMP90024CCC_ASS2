@@ -15,8 +15,10 @@ URL = os.getenv("URL")
 
 
 
-USERNAME='admin'
-PASSWORD = 'password'
+USERNAME=os.getenv("USERNAME")
+
+PASSWORD = os.getenv("PASSWORD")
+
 
 
 
