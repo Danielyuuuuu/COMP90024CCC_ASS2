@@ -403,6 +403,12 @@ def get_monthly_topwords():
                     lst.append([month, key, word, count])
     df = pd.DataFrame(lst)
     df.columns = ["month", "zone", "word", "count"]
+
+    zones = ['Adelaide', 'Ballarat', 'Brisbane', 'Bunbury', 'Canberra', 'Geelong', 'Hobart', 'Melbourne', 'Newcastle', 'Perth', 'Sydney']
+    missing_zones = set(zones) - set(df["zone"].unique())
+    for zone in missing_zones:
+        df.loc[zone] = ["2021-01", zone, "Null", 0]
+
     return df
 
 
