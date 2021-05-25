@@ -11,3 +11,4 @@
     - role: deploy-couchdb
     # - role: couchdb-docker-compose
     # - role: run-crawler
+    - role: deploy-couchdb-cluster

@@ -17,7 +17,7 @@ couchdb_user_name: admin
 couchdb_user_password: password
 couchdb_port_number: 5984
 couchdb_name: my-couchdb
-cluster_name: 'couchdb_cluster'
+cluster_name: couchdb_cluster
 
 web_token: 'pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA'
 
