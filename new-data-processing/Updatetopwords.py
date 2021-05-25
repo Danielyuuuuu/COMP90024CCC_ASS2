@@ -233,4 +233,5 @@ if __name__ == '__main__':
     t = Timer(secs, job2)
     #job2()
     t.start()
+    print("Data processing has started")
 
