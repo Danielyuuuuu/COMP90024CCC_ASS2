@@ -20,7 +20,6 @@ PX_TOKEN = os.getenv("PXTOKEN")
 ##############################################
 from cloudant.design_document import DesignDocument
 
-
 USERNAME='admin'
 PASSWORD = 'password'
 URL = 'http://' + ADDRESS + ':5984/'
@@ -163,19 +162,48 @@ server = Flask(__name__)
 app = dash.Dash(server=server, external_stylesheets=external_stylesheets)
 app.title = 'Australia & Twitter Analyse'
 
+cov_dict = get_data_summary(db="covid",viewType="zone month")
+vac_dict = get_data_summary(db="vaccine",viewType="zone month")
+
+cov_sen = get_data_summary(db="covid",viewType="zone")
+vac_sen = get_data_summary(db="vaccine",viewType="zone")
+vac_sen["Ballarat"] = 0.52
+vac_sen["Bunbury"] = 0.52
+sen_withoutzone = {'Adelaide': 0.693848,
+                'Ballarat': 0.715091,
+                'Brisbane': 0.710385,
+                'Bunbury': 0.80026,
+                'Canberra': 0.690317,
+                'Geelong': 0.678222,
+                'Hobart': 0.690671,
+                'Melbourne': 0.704503,
+                'Newcastle': 0.75033,
+                'Perth': 0.700816,
+                'Sydney': 0.723348}
+
+wordfreq = {"Adelaide": {"Adelaide": 281, "Australia": 203, "South": 163, "posted": 141, "photo": 134, "today": 125, "people": 82, "great": 80, "Happy": 68, "video": 68}, "Ballarat": {"#walkies": 24, "Ballarat": 23, "Abstract": 16, "#zerowaste": 14, "#recycle": 13, "#MAFS": 12, "#abstractart": 12, "#artist": 11, "#recycling": 11, "#artwork": 11}, "Brisbane": {"posted": 961, "photo": 938, "Brisbane": 489, "Queensland": 476, "Australia": 350, "today": 201, "people": 126, "great": 119, "night": 114, "first": 111}, "Bunbury": {"Bunbury": 7, "Western": 4, "Australia": 4, "posted": 3, "photo": 3, "#housesitting": 2, "walking": 2, "today": 2, "Taking": 1, "break": 1}, "Canberra": {"Canberra": 168, "posted": 101, "photo": 97, "Australian": 71, "Australia": 65, "great": 58, "eWasp": 58, "today": 55, "people": 52, "morning": 50}, "Geelong": {"Geelong": 80, "Extreme": 44, "Board": 37, "Store": 25, "Victoria": 24, "today": 22, "Tours": 17, "photo": 16, "posted": 15, "WARRIORS": 13}, "Hobart": {"Tasmania": 58, "Australia": 43, "Hobart": 39, "Kingston": 33, "photo": 33, "posted": 32, "Beach": 30, "today": 23, "iPhone": 20, "#blackandwhite": 19}, "Melbourne": {"posted": 2452, "photo": 2270, "Victoria": 1343, "Melbourne": 1336, "Australia": 1137, "today": 539, "people": 410, "great": 385, "would": 323, "video": 300}, "Newcastle": {"posted": 251, "photo": 226, "Newcastle": 188, "South": 90, "Wales": 89, "Forum": 76, "University": 69, "Sport": 61, "today": 51, "Australia": 37}, "Perth": {"Perth": 479, "Australia": 474, "posted": 453, "photo": 415, "Western": 414, "today": 153, "people": 129, "@11AberdeenStreet": 124, "\ufe0f0893252011": 116, "great": 109}, "Sydney": {"posted": 3089, "photo": 2893, "Sydney": 2420, "Australia": 2182, "South": 633, "Wales": 588, "today": 582, "people": 368, "great": 364, "video": 348}}
+
+def convert_sentiment(dict, colname):
+    sendf = pd.DataFrame(dict.items())
+    sendf.columns = ["Zone", colname]
+    return sendf
 infodf = pd.read_csv("./zone_stats.csv",index_col=0)
 geodf = pd.read_csv("./target_zones.csv",index_col=0)[["zone","center_longitude", "center_latitude"]]
 mapdf = pd.merge(geodf,infodf,how='inner',on='zone')
 columns = ["Zone","lon", "lat", "Overseas Rate", "Average Study Years", "Christian Ratio",\
               "Islam Ratio", "Hindo Ratio", "No-Religon Ratio", "Median Age", "Median Total FAM INC Weekly"]
 mapdf.columns=columns
-att = columns[3:]
+
+mapdf = pd.merge(mapdf, convert_sentiment(sen_withoutzone, "Sentiment without Keyword"), how='inner',on='Zone')
+mapdf = pd.merge(mapdf, convert_sentiment(cov_sen, "Covid Sentiment"), how='inner',on='Zone')
+mapdf = pd.merge(mapdf, convert_sentiment(vac_sen, "Vaccine Sentiment"), how='inner',on='Zone')
+att = columns[3:] + ["Sentiment without Keyword", "Covid Sentiment", "Vaccine Sentiment"]
 
 
-corrdf = mapdf[["Zone","Overseas Rate", "Average Study Years", "Christian Ratio",\
+corrdf = mapdf[["Sentiment without Keyword", "Covid Sentiment", "Vaccine Sentiment", "Overseas Rate", "Average Study Years", "Christian Ratio",\
               "Islam Ratio", "Hindo Ratio", "No-Religon Ratio", "Median Age", "Median Total FAM INC Weekly"]].corr()
 corr_fig = px.imshow(corrdf,color_continuous_scale="rdbu", range_color=[-1,1], title="Background Inner Correlation")
-corr_fig.update_layout({"height": 600})
+corr_fig.update_layout({"height": 700})
 
 
 # information = get_data_summary(db="covid",viewType="zone",startkey=0,mode="mean")
@@ -188,7 +216,7 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='Map Color',
                 options=[{'label': i, 'value': i} for i in att],
-                value='Overseas Rate'
+                value='Sentiment without Keyword'
             ),
         ],
         style={'width': '25%', 'display': 'inline-block','padding': '20px 5px'}),
@@ -198,7 +226,7 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='Map Size',
                 options=[{'label': i, 'value': i} for i in att],
-                value='Overseas Rate'
+                value='Islam Ratio'
             ),
         ],
         style={'width': '25%', 'display': 'inline-block','padding': '20px 5px'}),
@@ -276,7 +304,7 @@ def updata_word_total_chart(hoverData):
         hoverData ={"points":[{"hovertext":"Sydney"}]}
     zone_name = hoverData["points"][0]["hovertext"]
     tmpdf = get_monthly_topwords()
-    fig = px.bar(tmpdf[tmpdf["zone"]==zone_name], x='word', y='count', animation_frame="month", title="Monthly Top Words in "+zone_name)
+    fig = px.bar(tmpdf[tmpdf["zone"]==zone_name], x='word', y='count', animation_frame="month", title="Monthly Top Words in \""+zone_name+"\"")
     fig.update_layout({"height":450})
     return fig
 
@@ -292,7 +320,7 @@ def update_linechart(hoverData):
     tmpdf = df[df["zone"]==zone_name]
     # print(tmpdf)
     fig.add_trace(go.Scatter(x=tmpdf["date"], y=tmpdf["senti score"], mode='lines+markers'))
-    fig.update_layout({"title":zone_name+" Sentimental Score(Keyword: Vaccination)", "height":340})
+    fig.update_layout({"title":"\""+zone_name+"\" Sentimental Score (Keyword: Vaccination)", "height":340})
     return fig
 
 @app.callback(
@@ -306,7 +334,7 @@ def update_linechart(hoverData):
     df = convert_dict_df(cov_dict)
     tmpdf = df[df["zone"]==zone_name]
     fig.add_trace(go.Scatter(x=tmpdf["date"], y=tmpdf["senti score"], mode='lines+markers'))
-    fig.update_layout({"title":zone_name+" Sentimental Score(Keyword: Covid)", "height":340})
+    fig.update_layout({"title":"\""+zone_name+"\" Sentimental Score (Keyword: Covid)", "height":340})
     return fig
 
 @app.callback(
@@ -317,16 +345,12 @@ def update_linechart(hoverData):
         hoverData ={"points":[{"hovertext":"Sydney"}]}
     fig = go.Figure()
     zone_name = hoverData["points"][0]["hovertext"]
-
     df = convert_count(wordfreq)
     tmpdf = df[df["zone"]==zone_name]
-
     fig = px.bar(tmpdf, y='count', x='word')
     # fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
     fig.update_layout(uniformtext_minsize=8, title="Top Word History", uniformtext_mode='hide', height=250)
-
     return fig
-
 
 @app.callback(
     dash.dependencies.Output('Background Map', 'figure'),
@@ -347,14 +371,12 @@ def updata_map(color, size):
     dash.dependencies.Output('Scatter', 'figure'),
      dash.dependencies.Input('Map Size', 'value'))
 def updata_map(size):
-
-    sendf = pd.DataFrame(sen_withoutzone.items())
-    sendf.columns = ["Zone", "sen score"]
+    sendf = convert_sentiment(sen_withoutzone, "Sentimental score")
     df = pd.merge(sendf,mapdf,how='inner',on='Zone')
-
-    fig = px.scatter(df, x="Median Age", y="sen score",title="History Sentiment by "+"Median Age")
+    fig = px.scatter(df, x=size, y="Sentimental score",title="History Sentiment by \""+size+"\"")
     fig.update_layout({"height": 700})
     return fig
+
 
 
 def convert_monthly_topword(monthly_topword):
@@ -363,27 +385,9 @@ def convert_monthly_topword(monthly_topword):
         for area in monthly_topword[month]:
             for word in monthly_topword[month][area]:
                 lst.append([month, area, word, monthly_topword[month][area][word]])
-    
+
     return pd.DataFrame(lst)
 
-
-
-cov_dict = get_data_summary(db="covid",viewType="zone month")
-
-vac_dict = get_data_summary(db="vaccine",viewType="zone month")
-
-wordfreq = {"Adelaide": {"Adelaide": 281, "Australia": 203, "South": 163, "posted": 141, "photo": 134, "today": 125, "people": 82, "great": 80, "Happy": 68, "video": 68}, "Ballarat": {"#walkies": 24, "Ballarat": 23, "Abstract": 16, "#zerowaste": 14, "#recycle": 13, "#MAFS": 12, "#abstractart": 12, "#artist": 11, "#recycling": 11, "#artwork": 11}, "Brisbane": {"posted": 961, "photo": 938, "Brisbane": 489, "Queensland": 476, "Australia": 350, "today": 201, "people": 126, "great": 119, "night": 114, "first": 111}, "Bunbury": {"Bunbury": 7, "Western": 4, "Australia": 4, "posted": 3, "photo": 3, "#housesitting": 2, "walking": 2, "today": 2, "Taking": 1, "break": 1}, "Canberra": {"Canberra": 168, "posted": 101, "photo": 97, "Australian": 71, "Australia": 65, "great": 58, "eWasp": 58, "today": 55, "people": 52, "morning": 50}, "Geelong": {"Geelong": 80, "Extreme": 44, "Board": 37, "Store": 25, "Victoria": 24, "today": 22, "Tours": 17, "photo": 16, "posted": 15, "WARRIORS": 13}, "Hobart": {"Tasmania": 58, "Australia": 43, "Hobart": 39, "Kingston": 33, "photo": 33, "posted": 32, "Beach": 30, "today": 23, "iPhone": 20, "#blackandwhite": 19}, "Melbourne": {"posted": 2452, "photo": 2270, "Victoria": 1343, "Melbourne": 1336, "Australia": 1137, "today": 539, "people": 410, "great": 385, "would": 323, "video": 300}, "Newcastle": {"posted": 251, "photo": 226, "Newcastle": 188, "South": 90, "Wales": 89, "Forum": 76, "University": 69, "Sport": 61, "today": 51, "Australia": 37}, "Perth": {"Perth": 479, "Australia": 474, "posted": 453, "photo": 415, "Western": 414, "today": 153, "people": 129, "@11AberdeenStreet": 124, "\ufe0f0893252011": 116, "great": 109}, "Sydney": {"posted": 3089, "photo": 2893, "Sydney": 2420, "Australia": 2182, "South": 633, "Wales": 588, "today": 582, "people": 368, "great": 364, "video": 348}}
-sen_withoutzone = {'Adelaide': 0.693848,
-                'Ballarat': 0.715091,
-                'Brisbane': 0.710385,
-                'Bunbury': 0.80026,
-                'Canberra': 0.690317,
-                'Geelong': 0.678222,
-                'Hobart': 0.690671,
-                'Melbourne': 0.704503,
-                'Newcastle': 0.75033,
-                'Perth': 0.700816,
-                'Sydney': 0.723348}
 
 def get_monthly_topwords():
     db10 = CloudantDB("monthlytopwords")
