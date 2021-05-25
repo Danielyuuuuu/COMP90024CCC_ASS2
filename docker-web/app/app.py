@@ -349,10 +349,10 @@ def updata_map(color, size):
 def updata_map(size):
 
     sendf = pd.DataFrame(sen_withoutzone.items())
-    sendf.columns = ["zone", "sen score"]
-    df = pd.merge(sendf,mapdf,how='inner',on='zone')
+    sendf.columns = ["Zone", "sen score"]
+    df = pd.merge(sendf,mapdf,how='inner',on='Zone')
 
-    fig = px.scatter(df, x=size, y="sen score",title="History Sentiment by "+size)
+    fig = px.scatter(df, x="Median Age", y="sen score",title="History Sentiment by "+"Median Age")
     fig.update_layout({"height": 700})
     return fig
 
