@@ -1,6 +1,6 @@
-USERNAME = 'admin'
-PASSWORD = 'password'
-URL = 'http://172.26.131.218:5984'
+import os
+from dotenv import load_dotenv, find_dotenv
+from pathlib import Path
 from cloudant.client import CouchDB
 from cloudant.design_document import DesignDocument
 from cloudant.view import View
@@ -8,6 +8,18 @@ from collections import Counter
 from datetime import datetime, timedelta
 from threading import Timer
 import sys
+env_path = Path('./ip.env')
+load_dotenv(dotenv_path=env_path, verbose=True)
+
+URL = os.getenv("URL")
+
+
+
+USERNAME='admin'
+PASSWORD = 'password'
+
+
+
 
 
 class CloudantDB():
@@ -204,14 +216,12 @@ def job2():
     db10 = CloudantDB("monthlytopwords")
     for i in cdict:
         db10.add_record(cdict[i], key=i)
-    print(db10.get_data())
+    #print(db10.get_data())
     return
 
 
 if __name__ == '__main__':
-    IP = sys.argv[1]
 
-    URL = 'http://' + IP + ':5984/'
     x = datetime.today()
     y = x.replace(day=x.day, hour=1, minute=0, second=0, microsecond=0) + timedelta(days=1)
     delta_t = y - x
