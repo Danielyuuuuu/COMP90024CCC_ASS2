@@ -127,26 +127,27 @@ def main():
                 return False
 
     
-    # connect twitter
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
-    api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-    
-    try:
-        api.verify_credentials()
-        print("Authentication OK")
-    except:
-        print("Error during authentication")
-    
-
-
-    box= getBoundingbox(zone_info["features"])
-    box_1d = [j for sub in box.values() for j in sub]
-    
-    myUserListener = UserTimelineListener(api,words,box.keys())
-    myStreamListener = MyStreamListener(words,box.keys(),myUserListener)
+   
     while True:
         try:
+             # connect twitter
+            auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+            auth.set_access_token(access_token, access_token_secret)
+            api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+            
+            try:
+                api.verify_credentials()
+                print("Authentication OK")
+            except:
+                print("Error during authentication")
+            
+        
+        
+            box= getBoundingbox(zone_info["features"])
+            box_1d = [j for sub in box.values() for j in sub]
+            
+            myUserListener = UserTimelineListener(api,words,box.keys())
+            myStreamListener = MyStreamListener(words,box.keys(),myUserListener)
             myStream = tweepy.Stream(auth, listener=myStreamListener)
             myStream.filter(locations=box_1d, languages=["en"])
         except Exception as e:
