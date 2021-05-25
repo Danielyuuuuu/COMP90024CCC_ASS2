@@ -1,10 +1,4 @@
 ---
-# - name: Update and upgrade apt packages
-#   become: true
-#   apt:
-#     upgrade: yes
-#     update_cache: yes
-
 # Install python
 - name: Install pip
   become: yes
@@ -12,22 +6,6 @@
     name: ['python3-pip']
     state: latest
     update_cache: yes
-
-#  # Install python
-# - name: Install pip
-#   become: yes
-#   apt:
-#     name: ['python3-venv']
-#     state: latest
-#     update_cache: yes   
-
-# # Install python
-# - name: Install pip
-#   become: yes
-#   apt:
-#     name: ['python3-dev']
-#     state: latest
-#     update_cache: yes
 
 # Update python
 - name: Update pip
@@ -42,25 +20,6 @@
   pip:
     name: ['couchdb']
     state: latest
-
-# # Install docker
-# - name: Install docker
-#   become: yes
-#   apt:
-#     name: ['docker']
-#     state:  latest
-
-# - name: Install docker.io
-#   become: yes
-#   apt:
-#     name: ['docker.io']
-#     state: latest
-
-# - name: Install docker-compose
-#   become: yes
-#   apt:
-#     name: ['docker-compose']
-#     state: latest
 
 
 # Install pandas
@@ -134,125 +93,6 @@
     state: latest
     update_cache: yes
 
-# - name: Update apt and install package to allow apt to use a repository over HTTPS
-#   shell: |
-#     sudo apt-get update
-#     sudo apt-get install \
-#     apt-transport-https \
-#     ca-certificates \
-#     curl \
-#     gnupg \
-#     lsb-release
-
-# - name: Add Docker’s official GPG key
-#   shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-# - name: Set up stable repository
-#   shell: |
-#     echo \
-#     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-#     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# - name: Kill process
-#     shell: sudo kill 21356
-
-# - name: Uninstall old docker
-#   shell: sudo apt-get remove docker docker.io containerd runc
-
-# - name: Install docker
-#   become: yes
-#   apt:
-#     name: ['docker-ce', 'docker-ce-cli', containerd.io]
-#     state: latest
-#     update_cache: yes
-
-# - name: Create the docker group
-#   shell: sudo groupadd docker
-
-# - name: Add root to the docker group
-#   become: yes
-#   shell: |
-#     sudo usermod -aG docker root
-#     sudo usermod -aG docker ubuntu
-
-# - name: Activate the changes to groups
-#   become: yes
-#   shell: newgrp docker 
-
-
-# - name: install dependency
-#   become: yes
-#   apt:
-#     name: "{{item}}"
-#     state: present
-#     update_cache: yes
-#   loop:
-#     - apt-transport-https
-#     - ca-certificates
-#     - curl
-#     - gnupg-agent
-#     - software-properties-common
-
-# - name: add GPG key
-#   become: yes
-#   apt_key:
-#     url: https://download.docker.com/linux/ubuntu/gpg
-#     state: present
-
-# - name: add docker repository to apt
-#   become: yes
-#   apt_repository:
-#     repo: deb https://download.docker.com/linux/ubuntu bionic stable
-#     state: present
-
-# - name: install docker
-#   become: yes
-#   apt:
-#     name: "{{item}}"
-#     state: latest
-#     update_cache: yes
-#   loop:
-#     - docker-ce
-#     - docker-ce-cli
-#     - containerd.io
-#     - docker-compose
-
-# - name: Check if docker has started
-#   become: yes
-#   service:
-#     name: docker
-#     state: started
-#     enabled: yes
-
-# - name: Create the docker group
-#   shell: sudo groupadd docker
-
-# - name: Add root to the docker group
-#   become: yes
-#   shell: |
-#     sudo usermod -aG docker root
-#     sudo usermod -aG docker ubuntu
-
-# - name: Uninstall old versions of docker
-#   become: yes
-#   shell: sudo apt-get remove docker docker-engine docker.io containerd runc
-
-# - name: Uninstall old versions of docker
-#   become: yes
-#   apt:
-#     pkg: ['docker', 'docker-engine', 'docker.io', 'containerd', 'runc']
-#     state: absent
-#   sudo: yes
-
-# - name: Set up the repository
-#   become: yes
-#   shell: sudo apt-get install \
-#     apt-transport-https \
-#     ca-certificates \
-#     curl \
-#     gnupg \
-#     lsb-release
-
 - name: Update and upgrade apt packages
   become: true
   apt:
@@ -266,48 +106,11 @@
     state: latest
     update_cache: yes
 
-# - name: Add Docker’s official GPG key
-#   become: yes
-#   get_url:
-#     url: https://download.docker.com/linux/ubuntu/gpg
-#     dest: /usr/share/keyrings/docker-archive-keyring.gpg
-
-# - name: Add Docker's official apt key.
-#   become: yes
-#   apt_key:
-#     url: https://download.docker.com/linux/ubuntu/gpg
-#     id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-#     state: present
-#     update_cache: yes
-#   register: add_key
-#   ignore_errors: true
-
-# - name: Add Docker GPG key
-#   become: yes
-#   apt_key: url=https://download.docker.com/linux/ubuntu/gpg
-
 - name: Add Docker GPG key
   become: yes
   shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
   async: 45
   ignore_errors: yes
-
-# - name: Add Docker apt key if failed
-#   shell: "curl -sSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
-#   args:
-#     warn: no
-#   when: add_key|failed  
-
-# - name: Add Docker’s official GPG key
-#   become: yes
-#   shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-#   args:
-#     warn: no
-#   when: add_key|failed  
-
-# - name: 
-#   become: yes
-#   shell: sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
 - name: Set up the stable repository
   become: yes
@@ -315,20 +118,7 @@
     echo \
     "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-# - name: sudo apt-get update
-#   become: yes
-#   shell: sudo apt-get update
 
-
-# - name: Update and upgrade apt packages
-#   become: true
-#   apt:
-#     upgrade: yes
-#     # update_cache: yes
-
-# - name: Install docker
-#   become: yes
-#   shell: sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 - name: Update and upgrade apt packages
   become: true

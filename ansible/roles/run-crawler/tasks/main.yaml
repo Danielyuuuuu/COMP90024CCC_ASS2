@@ -1,15 +1,3 @@
-# - set_fact:
-#     fs_ip_addr: "{{ (lookup('file', '../inventory/host.ini').splitlines()|
-#                     list|
-#                     select('search', 'database')|
-#                     list|
-#                     first).split().0 }}"
-
-# - name: Unzip sentiment_analysis
-#   shell: |
-#     cd /home/ubuntu/COMPCOMP90024CCC_ASS2/crawler/sentiment_analysis
-#     7z x sentiment_analysis.7z 
-
 - name: Delete nlp.model
   file:
     state: absent

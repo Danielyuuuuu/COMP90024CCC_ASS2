@@ -5,41 +5,10 @@
     upgrade: yes
     update_cache: yes
 
-# - name: add github ssh key
-#   copy:
-#     src: "config/github-key.pem"
-#     dest: /home/ubuntu/.ssh/github-key
-#     owner: ubuntu
-#     group: ubuntu
-#     mode: 0600
-
-# - name: add github ssh key to a folder
-#   become: yes
-#   copy:
-#     src: "config/github-key.pem"
-#     dest: /home/ubuntu/
-#     owner: ubuntu
-#     group: ubuntu
-#     mode: 0600
-
-# - name: configure ssh to use ansible key for github.com
-#   template:
-#     src: "config/ssh-config"
-#     dest: /home/ubuntu/.ssh/config
-#     owner: ubuntu
-#     group: ubuntu
-#     mode: 0644
-
 - name: Delete content & directory
   file:
     state: absent
     path: '{{ git_repo }}'
-
-# - name: Get updated files from git repository 
-#   git: 
-#     repo: "https://{{github_user_name}}:{{github_user_password}}@github.com/rexding97/COMP90024CCC_ASS2.git"
-#     dest: /home/ubuntu/COMPCOMP90024CCC_ASS2
-#   # async: 60
 
 - name: Get updated files from git repository   
   shell: git clone https://mrc-user:unimelb2021@github.com/rexding97/COMP90024CCC_ASS2.git /home/ubuntu/COMPCOMP90024CCC_ASS2
