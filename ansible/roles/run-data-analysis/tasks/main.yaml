@@ -1,0 +1,24 @@
+- name: Add env file
+  become: yes
+  copy:
+    dest: /home/ubuntu/COMPCOMP90024CCC_ASS2/docker-topword/.env
+    content: |
+      URL=http://{{ groups['database'][0] }}:5984
+      USERNAME={{ couchdb_user_name }}
+      PASSWORD={{ couchdb_user_password }}
+
+- name: Stop docker container
+  shell: |
+    docker stop dataAnalysis
+    docker container rm dataAnalysis
+  ignore_errors: yes
+
+- name: Pull data analysis image from Docker Hub
+  shell: sudo docker pull comp90024ass2/topword
+  ignore_errors: yes
+
+- name: Run data analysis
+  shell: docker run --name dataAnalysis --env-file=/home/ubuntu/COMPCOMP90024CCC_ASS2/docker-topword/.env -d comp90024ass2/topword 
+  ignore_errors: yes
+
+  
