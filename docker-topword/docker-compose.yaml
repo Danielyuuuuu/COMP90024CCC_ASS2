@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+
+  topword:
+    build: 
+      context: ./
+    container_name: topword
+    hostname: topword
+    env_file:
+      - .env
+    networks:
+      - network 
+      
+networks:
+  network:
+    driver: bridge
