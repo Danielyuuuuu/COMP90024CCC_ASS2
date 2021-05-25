@@ -27,7 +27,7 @@
   copy:
     dest: /home/ubuntu/COMPCOMP90024CCC_ASS2/docker-web/web-variables.env
     content: |
-      COUCHDB_ADDRESS="{{ groups['frontend'][0] }}"
+      COUCHDB_ADDRESS={{ groups['database'][0] }}
       PXTOKEN=pk.eyJ1IjoicmV4OTciLCJhIjoiY2tvemJsaWJiMGlvMTJ2bHFsdHZiYmszZiJ9.P0r2OONNtWeK2ckzB8-UnA
 
 
