@@ -1,4 +1,5 @@
 from dash.dependencies import Output, Input, State
+from pandas.core.frame import DataFrame
 # import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import dash_core_components as dcc
@@ -348,10 +349,10 @@ def updata_map(color, size):
 def updata_map(size):
 
     sendf = pd.DataFrame(sen_withoutzone.items())
-    sendf.columns = ["zone", "sen score"]
-    pd.merge(sendf,mapdf,how='inner',on='zone')
+    sendf.columns = ["Zone", "sen score"]
+    df = pd.merge(sendf,mapdf,how='inner',on='Zone')
 
-    fig = px.scatter(mapdf, x=size, y="sen score",title="History Sentiment by "+size)
+    fig = px.scatter(df, x="Median Age", y="sen score",title="History Sentiment by "+"Median Age")
     fig.update_layout({"height": 700})
     return fig
 
